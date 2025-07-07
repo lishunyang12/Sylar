@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __SYLAR_LOG_H__
+#define __SYLAR_LOG_H__
 
 #include <string>
 #include <stdint.h>
@@ -35,6 +36,8 @@
 #define SYLAR_LOG_FMT_WARN(logger, fmt, ...)   SYLAR_LOG_FMT_LEVEL(logger, sylar::LogLevel::WARN, fmt, __VA_ARGS__)
 #define SYLAR_LOG_FMT_ERROR(logger, fmt, ...)  SYLAR_LOG_FMT_LEVEL(logger, sylar::LogLevel::ERROR, fmt, __VA_ARGS__)
 #define SYLAR_LOG_FMT_FATAL(logger, fmt, ...)  SYLAR_LOG_FMT_LEVEL(logger, sylar::LogLevel::FATAL, fmt, __VA_ARGS__)
+
+#define SYLAR_LOG_ROOT() sylar::LoggerMgr::GetInstance()->getRoot()
 
 namespace sylar {
 
@@ -204,6 +207,7 @@ class LogManager {
 public:
 	Logger::ptr getLogger(const std::string& name);
 	void init();
+	Logger::ptr getRoot() const { return m_root; }
 private:
 	friend class sylar::Singleton<LogManager>;
 
@@ -217,4 +221,6 @@ private:
 typedef sylar::Singleton<LogManager> LoggerMgr;
 
 };
+
+#endif
 
