@@ -9,6 +9,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic -O3 -g -Wall -Werror")
 set(LIB_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/sylar/log.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/sylar/util.cpp  
+    ${CMAKE_CURRENT_SOURCE_DIR}/sylar/config.cc
 )
 
 # 创建动态库
@@ -16,7 +17,12 @@ add_library(sylar SHARED ${LIB_SRC})
 
 # 创建测试可执行文件
 add_executable(test ${CMAKE_CURRENT_SOURCE_DIR}/tests/test.cc)
+add_dependencies(test sylar)
 target_link_libraries(test sylar)
+
+add_executable(test_config ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_config.cc)
+add_dependencies(test_config sylar)
+target_link_libraries(test_config sylar)
 
 # 设置输出目录
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/bin)

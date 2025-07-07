@@ -58,6 +58,9 @@ public:
             }
             return false;
         }
+
+        const T getValue() const { return m_val; }
+        void setValue(const T& v) { m_val = v; }
 private:
     T m_val;
 };
@@ -74,14 +77,15 @@ public:
             SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "Lookupname:" << name << "exists";
             return tmp;
         }
-        if(name.find_first_not_of("abcdefghikjlmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+        if(name.find_first_not_of("abcdefghikjlmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ._0123456789")
                 != std::string::npos) {
-            SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "Lookup name invalid" << name;
+            SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "Lookup name invalid:" << name;
             throw std::invalid_argument(name);
         }
 
         typename ConfigVar<T>::ptr v(new ConfigVar<T>(name, default_value, description));
-        s_datas[name] = v;
+        m_datas[name] = v;
+        return v;
     }
 
     template<class T> 
@@ -90,7 +94,7 @@ public:
             if(it == m_datas.end()) {
                 return nullptr;
             } 
-            return std::dynamic_pointer_cast<ConfigVar<T>>(it->second)
+            return std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
     }
 
 private:

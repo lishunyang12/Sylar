@@ -11,6 +11,7 @@
 #include <iostream>
 #include <stdarg.h>
 #include <map>
+#include "util.h"
 #include "singleton.h"
 
 #define SYLAR_LOG_LEVEL(logger, level) \
