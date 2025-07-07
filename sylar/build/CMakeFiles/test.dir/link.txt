@@ -1,0 +1,1 @@
+/usr/bin/c++   -rdynamic -O3 -g -Wall -Werror -O3 -DNDEBUG   CMakeFiles/test.dir/tests/test.cc.o  -o ../bin/test  -Wl,-rpath,/home/li/Desktop/Sylar/sylar/lib ../lib/libsylar.so 
