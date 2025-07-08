@@ -1,5 +1,5 @@
-/home/li/Desktop/Sylar/sylar/build/CMakeFiles/rebuild_cache.dir
-/home/li/Desktop/Sylar/sylar/build/CMakeFiles/test_config.dir
-/home/li/Desktop/Sylar/sylar/build/CMakeFiles/edit_cache.dir
-/home/li/Desktop/Sylar/sylar/build/CMakeFiles/test.dir
-/home/li/Desktop/Sylar/sylar/build/CMakeFiles/sylar.dir
+/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/build/CMakeFiles/rebuild_cache.dir
+/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/build/CMakeFiles/test_config.dir
+/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/build/CMakeFiles/edit_cache.dir
+/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/build/CMakeFiles/test.dir
+/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/build/CMakeFiles/sylar.dir

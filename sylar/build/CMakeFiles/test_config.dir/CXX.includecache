@@ -6,7 +6,7 @@
 
 #IncludeRegexTransform: 
 
-/home/li/Desktop/Sylar/sylar/sylar/config.h
+/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/config.h
 memory
 -
 string
@@ -16,9 +16,9 @@ sstream
 boost/lexical_cast.hpp
 -
 log.h
-/home/li/Desktop/Sylar/sylar/sylar/log.h
+/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/log.h
 
-/home/li/Desktop/Sylar/sylar/sylar/log.h
+/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/log.h
 string
 -
 stdint.h
@@ -40,13 +40,13 @@ stdarg.h
 map
 -
 util.h
-/home/li/Desktop/Sylar/sylar/sylar/util.h
+/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/util.h
 singleton.h
-/home/li/Desktop/Sylar/sylar/sylar/singleton.h
+/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/singleton.h
 
-/home/li/Desktop/Sylar/sylar/sylar/singleton.h
+/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/singleton.h
 
-/home/li/Desktop/Sylar/sylar/sylar/util.h
+/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/util.h
 sys/types.h
 -
 unistd.h
@@ -56,9 +56,9 @@ stdio.h
 stdint.h
 -
 
-/home/li/Desktop/Sylar/sylar/tests/test_config.cc
+/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/tests/test_config.cc
 ../sylar/config.h
-/home/li/Desktop/Sylar/sylar/sylar/config.h
+/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/config.h
 ../sylar/log.h
-/home/li/Desktop/Sylar/sylar/sylar/log.h
+/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/log.h
 
