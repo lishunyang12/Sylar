@@ -19,9 +19,11 @@ target_link_libraries(test sylar)
 
 add_executable(test_config ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_config.cc)
 target_include_directories(test_config PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/sylar)
-target_link_libraries(test_config sylar)
+target_link_libraries(test_config sylar ${CMAKE_CURRENT_SOURCE_DIR}/apps/yaml-cpp/lib/libyaml-cpp.a)
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+
+
 
 
 

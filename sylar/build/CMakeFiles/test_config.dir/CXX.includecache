@@ -61,4 +61,6 @@ config.h
 /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/tests/config.h
 log.h
 /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/tests/log.h
+yaml-cpp/yaml.h
+-
 
