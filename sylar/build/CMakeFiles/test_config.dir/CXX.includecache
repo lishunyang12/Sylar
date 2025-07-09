@@ -57,10 +57,10 @@ stdint.h
 -
 
 /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/tests/test_config.cc
-config.h
-/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/tests/config.h
-log.h
-/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/tests/log.h
+sylar/config.h
+/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/tests/sylar/config.h
+sylar/log.h
+/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/tests/sylar/log.h
 yaml-cpp/yaml.h
 -
 

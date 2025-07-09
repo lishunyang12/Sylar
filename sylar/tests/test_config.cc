@@ -1,5 +1,5 @@
-#include "config.h"
-#include "log.h"
+#include "sylar/config.h"
+#include "sylar/log.h"
 #include <yaml-cpp/yaml.h>
 
 sylar::ConfigVar<int>::ptr g_int_value_config =
@@ -7,10 +7,28 @@ sylar::ConfigVar<int>::ptr g_int_value_config =
 sylar::ConfigVar<float>::ptr g_int_float_value_config =
      sylar::Config::Lookup("system.value", (float)10.5f, "system value");
 
+void print_yaml(const YAML::Node& node, int level) {
+     if(node.IsScalar()) {
+          SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << node.Scalar() << " - " << node.Tag() << " - " << level;
+     } else if(node.IsNull()) {
+          SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "NULL - " << node.Tag() << " - " << level;
+     } else if(node.IsMap()) {
+          for(auto it = node.begin(); it != node.end(); ++it) {
+               SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << it->first << " - " << it->second.Tag() << " - " << level;
+               print_yaml(it->second, level + 1);
+          }
+     } else if(node.IsSequence()) {
+          for(size_t i = 0; i < node.size(); ++i) {
+               SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << i << " - " << node[i].Tag() << " - " << level;
+               print_yaml(node[i], level + 1);
+          }
+     }
+} 
+
 void test_yaml() {
      YAML::Node root = YAML::LoadFile("/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/config/log.yaml");
-
-     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << root;
+     print_yaml(root, 0);
+     //SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << root;
 }
 
 int main(int argc, char** argv) {

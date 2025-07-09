@@ -6,5 +6,5 @@ CXX_FLAGS =  -rdynamic -O3 -g -Wall -Werror -O3 -DNDEBUG -fPIC   -std=gnu++11
 
 CXX_DEFINES = -Dsylar_EXPORTS
 
-CXX_INCLUDES = -I/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar 
+CXX_INCLUDES = -I/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/. -I/apps/yaml-cpp/include 
 

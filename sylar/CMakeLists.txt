@@ -4,26 +4,24 @@ project(sylar)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic -O3 -g -Wall -Werror")
 
-set(LIB_SRC
-    ${CMAKE_CURRENT_SOURCE_DIR}/sylar/log.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/sylar/util.cpp  
-    ${CMAKE_CURRENT_SOURCE_DIR}/sylar/config.cc
-)
-add_library(sylar SHARED ${LIB_SRC})
-target_include_directories(sylar PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/sylar)
-set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/lib)
+include_directories(.)
+include_directories(/apps/yaml-cpp/include)
 
-add_executable(test ${CMAKE_CURRENT_SOURCE_DIR}/tests/test.cc)
-target_include_directories(test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/sylar)
+link_directories(/apps/yaml-cpp/lib)
+
+set(LIB_SRC 
+    sylar/log.cpp
+    sylar/util.cpp 
+    sylar/config.cc 
+)
+
+add_library(sylar SHARED ${LIB_SRC})
+SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+
+add_executable(test tests/test.cc)
 target_link_libraries(test sylar)
 
-add_executable(test_config ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_config.cc)
-target_include_directories(test_config PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/sylar)
-target_link_libraries(test_config sylar ${CMAKE_CURRENT_SOURCE_DIR}/apps/yaml-cpp/lib/libyaml-cpp.a)
+add_executable(test_config tests/test_config.cc)
+target_link_libraries(test_config sylar yaml-cpp)
 
-set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/bin)
-
-
-
-
-
+SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
