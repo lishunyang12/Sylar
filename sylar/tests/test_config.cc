@@ -9,21 +9,33 @@ sylar::ConfigVar<float>::ptr g_int_float_value_config =
 
 void print_yaml(const YAML::Node& node, int level) {
      if(node.IsScalar()) {
-          SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << node.Scalar() << " - " << node.Tag() << " - " << level;
+          SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << std::string(level * 4, ' ') 
+               << node.Scalar() << " - " << node.Type() << " - " << level;
+               // Type codes: 
+               // 1 = Null, 2 = Map, 3 = Scalar, 4 = Sequence
      } else if(node.IsNull()) {
-          SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "NULL - " << node.Tag() << " - " << level;
+          SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << std::string(level * 4, ' ')  
+               << "NULL - " << node.Type() << " - " << level;
+               // Type codes:
+               // 1 = Null, 2 = Map, 3 = Scalar, 4 = Sequence
      } else if(node.IsMap()) {
           for(auto it = node.begin(); it != node.end(); ++it) {
-               SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << it->first << " - " << it->second.Tag() << " - " << level;
+               SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << std::string(level * 4, ' ')  
+               << it->first << " - " << it->second.Type() << " - " << level;
+               // Type codes:
+               // 1 = Null, 2 = Map, 3 = Scalar, 4 = Sequence
                print_yaml(it->second, level + 1);
           }
      } else if(node.IsSequence()) {
           for(size_t i = 0; i < node.size(); ++i) {
-               SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << i << " - " << node[i].Tag() << " - " << level;
+               SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << std::string(level * 4, ' ') 
+               << i << " - " << node[i].Type() << " - " << level;
+               // Type codes:
+               // 1 = Null, 2 = Map, 3 = Scalar, 4 = Sequence
                print_yaml(node[i], level + 1);
           }
      }
-} 
+}
 
 void test_yaml() {
      YAML::Node root = YAML::LoadFile("/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/config/log.yaml");

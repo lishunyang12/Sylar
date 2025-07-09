@@ -62,6 +62,7 @@
         "cinttypes": "cpp",
         "typeinfo": "cpp",
         "cfenv": "cpp",
-        "strstream": "cpp"
+        "strstream": "cpp",
+        "valarray": "cpp"
     }
 }

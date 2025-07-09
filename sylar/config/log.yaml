@@ -1,6 +1,7 @@
 logs:
   - name: root
     level: info
+    format: "%d%T%m%n"
     appenders:
       - type: FileLogAppender
         file: log.txt
@@ -8,6 +9,7 @@ logs:
 
   - name: system
     level: debug
+    format: "%d%T%m%n"
     appenders:
       - type: FileLogAppender
         file: log.txt
