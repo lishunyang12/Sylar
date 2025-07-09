@@ -1,0 +1,11 @@
+prefix=/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/apps/yaml-cpp
+exec_prefix=${prefix}
+includedir=/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/apps/yaml-cpp/include
+libdir=/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/apps/yaml-cpp/lib
+
+Name: Yaml-cpp
+Description: A YAML parser and emitter for C++
+Version: 0.8.0
+Requires:
+Libs: -L${libdir} -lyaml-cpp
+Cflags: -I${includedir}
