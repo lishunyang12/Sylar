@@ -63,6 +63,7 @@
         "typeinfo": "cpp",
         "cfenv": "cpp",
         "strstream": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "unordered_set": "cpp"
     }
 }

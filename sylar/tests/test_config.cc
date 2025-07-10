@@ -17,6 +17,12 @@ sylar::ConfigVar<std::list<int>>::ptr g_int_list_value_config =
 sylar::ConfigVar<std::set<int>>::ptr g_int_set_value_config =
      sylar::Config::Lookup("system.int_set", std::set<int>{1, 2}, "system int set");
 
+sylar::ConfigVar<std::unordered_set<int>>::ptr g_int_uset_value_config =
+     sylar::Config::Lookup("system.int_uset", std::unordered_set<int>{1, 2}, "system int uset");
+
+sylar::ConfigVar<std::map<std::string, int>>::ptr g_str_int_map_value_config =
+     sylar::Config::Lookup("system.str_int_map", std::map<std::string, int>{{"k", 2}}, "system str int map");
+
 void print_yaml(const YAML::Node& node, int level) {
      if(node.IsNull()) {
           SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << std::string(level * 4, ' ')  
@@ -64,11 +70,22 @@ void test_config() {
                SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) <<  #prefix " " #name ": " << i;     \
      }    \
      SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) <<  #prefix " " #name " yaml: " << g_var->toString();     \
+    }  
+
+#define XX_M(g_var, name, prefix)  \
+    {     \
+     auto& v = g_var->getValue();    \
+     for(auto& i : v) {              \
+               SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) <<  #prefix " " #name ": {" << i.first << " - " << i.second << "}";     \
+     }    \
+     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) <<  #prefix " " #name " yaml: " << g_var->toString();     \
     }     
 
     XX(g_int_vec_value_config, int_vec, before);
     XX(g_int_list_value_config, int_list, before);
     XX(g_int_set_value_config, int_set, before);
+    XX(g_int_uset_value_config, int_uset, before);
+    XX_M(g_str_int_map_value_config, str_int_map, before);
 
     YAML::Node root = YAML::LoadFile("/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/config/log.yaml");
     sylar::Config::LoadFromYaml(root);
@@ -79,6 +96,8 @@ void test_config() {
     XX(g_int_vec_value_config, int_vec, after);
     XX(g_int_list_value_config, int_list, after);
     XX(g_int_set_value_config, int_set, after);
+    XX(g_int_uset_value_config, int_uset, after);
+    XX_M(g_str_int_map_value_config, str_int_map, after);
 }
 
 int main(int argc, char** argv) {
