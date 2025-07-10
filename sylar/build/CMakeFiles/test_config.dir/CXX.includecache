@@ -13,7 +13,11 @@ string
 -
 sstream
 -
+algorithm
+-
 boost/lexical_cast.hpp
+-
+yaml-cpp/yaml.h
 -
 log.h
 ../sylar/log.h

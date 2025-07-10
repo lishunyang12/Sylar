@@ -17,7 +17,11 @@ string
 -
 sstream
 -
+algorithm
+-
 boost/lexical_cast.hpp
+-
+yaml-cpp/yaml.h
 -
 log.h
 /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/log.h

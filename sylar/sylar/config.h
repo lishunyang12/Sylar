@@ -4,7 +4,9 @@
 #include <memory>
 #include <string>
 #include <sstream>
+#include <algorithm>
 #include <boost/lexical_cast.hpp>
+#include <yaml-cpp/yaml.h>
 #include "log.h"
 
 namespace sylar {
@@ -15,6 +17,7 @@ public:
     ConfigVarBase(const std::string& name, const std::string& description = "") 
         :m_name(name)
         ,m_description(description){
+            std::transform(m_name.begin(), m_name.end(), m_name.begin(), ::tolower);
     }
     virtual ~ConfigVarBase() {}
 
@@ -77,7 +80,7 @@ public:
             SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "Lookupname:" << name << "exists";
             return tmp;
         }
-        if(name.find_first_not_of("abcdefghikjlmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ._0123456789")
+        if(name.find_first_not_of("abcdefghikjlmnopqrstuvwxyz._0123456789")
                 != std::string::npos) {
             SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "Lookup name invalid:" << name;
             throw std::invalid_argument(name);
@@ -97,6 +100,8 @@ public:
             return std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
     }
 
+    static void LoadFromYaml(const YAML::Node& root);
+    static ConfigVarBase::ptr LookupBase(const std::string& name);
 private:
     static ConfigVarMap m_datas;
 };

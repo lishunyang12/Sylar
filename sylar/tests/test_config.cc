@@ -8,15 +8,15 @@ sylar::ConfigVar<float>::ptr g_int_float_value_config =
      sylar::Config::Lookup("system.value", (float)10.5f, "system value");
 
 void print_yaml(const YAML::Node& node, int level) {
-     if(node.IsScalar()) {
-          SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << std::string(level * 4, ' ') 
-               << node.Scalar() << " - " << node.Type() << " - " << level;
-               // Type codes: 
-               // 1 = Null, 2 = Map, 3 = Scalar, 4 = Sequence
-     } else if(node.IsNull()) {
+     if(node.IsNull()) {
           SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << std::string(level * 4, ' ')  
                << "NULL - " << node.Type() << " - " << level;
                // Type codes:
+               // 1 = Null, 2 = Map, 3 = Scalar, 4 = Sequence
+     } else if(node.IsScalar()) {
+          SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << std::string(level * 4, ' ') 
+               << node.Scalar() << " - " << node.Type() << " - " << level;
+               // Type codes: 
                // 1 = Null, 2 = Map, 3 = Scalar, 4 = Sequence
      } else if(node.IsMap()) {
           for(auto it = node.begin(); it != node.end(); ++it) {
@@ -43,9 +43,20 @@ void test_yaml() {
      //SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << root;
 }
 
+void test_config() {
+    SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "before:" << g_int_value_config->getValue();
+    SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "before:" << g_int_float_value_config->toString();
+
+    YAML::Node root = YAML::LoadFile("/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/config/log.yaml");
+    sylar::Config::LoadFromYaml(root);
+
+    SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "before:" << g_int_value_config->getValue();
+    SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "before:" << g_int_float_value_config->toString();
+}
+
 int main(int argc, char** argv) {
-    SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << g_int_value_config->getValue();
-    SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << g_int_float_value_config->toString();
-    test_yaml();
+
+    //test_yaml();
+    test_config();
     return 0;
 }
