@@ -21,6 +21,18 @@ yaml-cpp/yaml.h
 -
 log.h
 ../sylar/log.h
+vector
+-
+map
+-
+set
+-
+unordered_map
+-
+unordered_map
+-
+list
+-
 
 ../sylar/log.h
 string
