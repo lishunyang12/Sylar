@@ -4,12 +4,18 @@
 
 sylar::ConfigVar<int>::ptr g_int_value_config =
      sylar::Config::Lookup("system.port", (int)8080, "system port");
+
 sylar::ConfigVar<float>::ptr g_int_float_value_config =
      sylar::Config::Lookup("system.value", (float)10.5f, "system value");
+
 sylar::ConfigVar<std::vector<int>>::ptr g_int_vec_value_config =
      sylar::Config::Lookup("system.int_vec", std::vector<int>{1, 2}, "system int vec");
+
 sylar::ConfigVar<std::list<int>>::ptr g_int_list_value_config =
      sylar::Config::Lookup("system.int_list", std::list<int>{1, 2}, "system int list");
+
+sylar::ConfigVar<std::set<int>>::ptr g_int_set_value_config =
+     sylar::Config::Lookup("system.int_set", std::set<int>{1, 2}, "system int set");
 
 void print_yaml(const YAML::Node& node, int level) {
      if(node.IsNull()) {
@@ -57,11 +63,12 @@ void test_config() {
      for(auto& i : v) {              \
                SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) <<  #prefix " " #name ": " << i;     \
      }    \
+     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) <<  #prefix " " #name " yaml: " << g_var->toString();     \
     }     
 
     XX(g_int_vec_value_config, int_vec, before);
     XX(g_int_list_value_config, int_list, before);
-
+    XX(g_int_set_value_config, int_set, before);
 
     YAML::Node root = YAML::LoadFile("/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/config/log.yaml");
     sylar::Config::LoadFromYaml(root);
@@ -71,7 +78,7 @@ void test_config() {
 
     XX(g_int_vec_value_config, int_vec, after);
     XX(g_int_list_value_config, int_list, after);
-
+    XX(g_int_set_value_config, int_set, after);
 }
 
 int main(int argc, char** argv) {

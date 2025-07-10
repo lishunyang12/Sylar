@@ -107,6 +107,36 @@ public:
     }
 };
 
+template<class T>
+class LexicalCast<std::string, std::set<T>> {
+public:
+    std::set<T> operator() (const std::string& v) {
+        YAML::Node node = YAML::Load(v);
+        typename std::set<T> vec;
+        std::stringstream ss;
+        for(size_t i = 0; i < node.size(); ++i) {
+            ss.str("");
+            ss << node[i];
+            vec.insert(LexicalCast<std::string, T>()(ss.str()));
+        }
+        return vec;
+    }
+};
+
+template<class T>
+class LexicalCast<std::set<T>, std::string> {
+public:
+    std::string operator() (const std::set<T>& v) {
+        YAML::Node node;
+        for(auto& i : v) {
+            node.push_back(YAML::Load(LexicalCast<T, std::string>()(i)));
+        }
+        std::stringstream ss;
+        ss << node;
+        return ss.str();
+    }
+};
+
 // from string to T 
 // 序列化 和 反序列化
 // FromStr T operator()(const std::string&)
