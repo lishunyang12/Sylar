@@ -23,6 +23,10 @@ sylar::ConfigVar<std::unordered_set<int>>::ptr g_int_uset_value_config =
 sylar::ConfigVar<std::map<std::string, int>>::ptr g_str_int_map_value_config =
      sylar::Config::Lookup("system.str_int_map", std::map<std::string, int>{{"k", 2}}, "system str int map");
 
+sylar::ConfigVar<std::unordered_map<std::string, int>>::ptr g_str_int_umap_value_config =
+     sylar::Config::Lookup("system.str_int_umap", std::unordered_map<std::string, int>{{"k", 2}}, "system str int umap");
+
+
 void print_yaml(const YAML::Node& node, int level) {
      if(node.IsNull()) {
           SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << std::string(level * 4, ' ')  
@@ -86,6 +90,7 @@ void test_config() {
     XX(g_int_set_value_config, int_set, before);
     XX(g_int_uset_value_config, int_uset, before);
     XX_M(g_str_int_map_value_config, str_int_map, before);
+    XX_M(g_str_int_umap_value_config, str_int_umap, before);
 
     YAML::Node root = YAML::LoadFile("/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/config/log.yaml");
     sylar::Config::LoadFromYaml(root);
@@ -98,6 +103,7 @@ void test_config() {
     XX(g_int_set_value_config, int_set, after);
     XX(g_int_uset_value_config, int_uset, after);
     XX_M(g_str_int_map_value_config, str_int_map, after);
+    XX_M(g_str_int_umap_value_config, str_int_umap, after);
 }
 
 int main(int argc, char** argv) {

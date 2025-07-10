@@ -28,3 +28,7 @@ system:
          k: 30
          k2: 20
          k3: 10
+  str_int_umap: 
+         k: 130
+         k2: 120
+         k3: 110
