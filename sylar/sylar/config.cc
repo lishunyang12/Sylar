@@ -53,6 +53,8 @@ void Config::LoadFromYaml(const YAML::Node& root) {
         std::transform(key.begin(), key.end(), key.begin(), ::tolower);
         ConfigVarBase::ptr var = LookupBase(key);
 
+        // change existing settings: name, value, description
+        // if exist change in m_datas, if not exist then pass
         if(var) {
             if(node.IsScalar()) {
                 var->fromString(node.Scalar());
