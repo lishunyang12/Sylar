@@ -32,7 +32,7 @@ public:
 
     virtual std::string toString() = 0;
     virtual bool fromString(const std::string& val) = 0;
-
+    virtual std::string getTypeName() const = 0;
 private:
     std::string m_name;
     std::string m_description;
@@ -266,6 +266,7 @@ public:
 
         const T getValue() const { return m_val; }
         void setValue(const T& v) { m_val = v; }
+        std::string getTypeName() const override { return typeid(T).name(); }
 private:
     T m_val;
 };
@@ -306,7 +307,9 @@ public:
             }
             SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) 
                 << "Type mismatch for config '" << name << "'"
-                << "(expected: )" << typeid(T).name();
+                << "(expected: " << typeid(T).name()
+                << ") (real_type= " << it->second->getTypeName() << ")"
+                << " " << it->second->toString();
             return nullptr;
     }
 
