@@ -5,6 +5,9 @@
 sylar::ConfigVar<int>::ptr g_int_value_config =
      sylar::Config::Lookup("system.port", (int)8080, "system port");
 
+sylar::ConfigVar<float>::ptr g_int_valuex_config =
+     sylar::Config::Lookup("system.port", (float)8080, "system port");
+
 sylar::ConfigVar<float>::ptr g_int_float_value_config =
      sylar::Config::Lookup("system.value", (float)10.5f, "system value");
 

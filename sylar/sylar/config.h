@@ -281,7 +281,8 @@ public:
         if(tmp) {
             SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "Lookupname:" << name << "exists";
             return tmp;
-        }
+        } 
+
         if(name.find_first_not_of("abcdefghikjlmnopqrstuvwxyz._0123456789")
                 != std::string::npos) {
             SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "Lookup name invalid:" << name;
@@ -299,7 +300,14 @@ public:
             if(it == m_datas.end()) {
                 return nullptr;
             } 
-            return std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
+            auto res =  std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
+            if(res) {
+                return res;
+            }
+            SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) 
+                << "Type mismatch for config '" << name << "'"
+                << "(expected: )" << typeid(T).name();
+            return nullptr;
     }
 
     static void LoadFromYaml(const YAML::Node& root);
