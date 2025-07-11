@@ -129,12 +129,6 @@ public:
      }
 };
 
-sylar::ConfigVar<Person>::ptr g_person = 
-     sylar::Config::Lookup("class.person", Person(), "system person");
-
-sylar::ConfigVar<std::map<std::string, Person>>::ptr g_person_map = 
-     sylar::Config::Lookup("class.map", std::map<std::string, Person>{}, "system person nao");
-
 namespace sylar {
 
 template<>
@@ -166,6 +160,16 @@ public:
 
 }
 
+sylar::ConfigVar<Person>::ptr g_person = 
+     sylar::Config::Lookup("class.person", Person(), "system person");
+
+sylar::ConfigVar<std::map<std::string, Person>>::ptr g_person_map = 
+     sylar::Config::Lookup("class.map", std::map<std::string, Person>{}, "system person map");
+
+sylar::ConfigVar<std::map<std::string, std::vector<Person>>>::ptr g_person_vec_map = 
+     sylar::Config::Lookup("class.vec_map", std::map<std::string, std::vector<Person>>{}, "system person vec map");
+
+
 void test_class() {
      SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "before: " << g_person->getValue().toString() 
      << g_person->toString();
@@ -181,6 +185,7 @@ void test_class() {
     }
 
      XX_PM(g_person_map, "class.map before");
+     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "before:" << g_person_vec_map->toString();
 
      YAML::Node root = YAML::LoadFile("/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/config/log.yaml");
      sylar::Config::LoadFromYaml(root);
@@ -189,6 +194,8 @@ void test_class() {
      << g_person->toString();   
 
      XX_PM(g_person_map, "class.map after");  
+     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "after:" << g_person_vec_map->toString();
+
 }
 
 int main(int argc, char** argv) {

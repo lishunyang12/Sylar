@@ -47,3 +47,18 @@ class:
         name: sylar02
         age: 40
         sex: true
+  vec_map:
+      k1_group1:
+        - name: m1
+          age: 33
+          sex: true
+        - name: m2
+          age: 44
+          sex: false
+      k1_group2:
+        - name: m21
+          age: 233
+          sex: true
+        - name: m22
+          age: 244
+          sex: false
