@@ -39,10 +39,12 @@
 #define SYLAR_LOG_FMT_FATAL(logger, fmt, ...)  SYLAR_LOG_FMT_LEVEL(logger, sylar::LogLevel::FATAL, fmt, __VA_ARGS__)
 
 #define SYLAR_LOG_ROOT() sylar::LoggerMgr::GetInstance()->getRoot()
+#define SYLAR_LOG_NAME(name) sylar::LoggerMgr::GetInstance()->getLogger(name)
 
 namespace sylar {
 
 class Logger;
+class LoggerManager;
 
 // log level
 class LogLevel {
@@ -57,6 +59,7 @@ public:
 	};
 
 	static const char* ToString(LogLevel::level level);
+	static LogLevel::level FromString(const std::string& str);
 };
 
 class LogEvent {
@@ -131,7 +134,12 @@ public:
 
 	void init();
 
+	bool isError() {
+		return m_error;
+	}
+
 private:
+	bool m_error = false;
 	std::string m_pattern;
 	std::vector<FormatItem::ptr> m_items;
 };
@@ -170,16 +178,25 @@ public:
 
 	void addAppender(LogAppender::ptr appender);
 	void delAppender(LogAppender::ptr appender);
+	void clearAppenders();
 	LogLevel::level getLevel() const { return m_level; }
 	void setLevel(LogLevel::level val) { m_level = val; }
 
+	void setFormatter(LogFormatter::ptr val);
+	void setFormatter(const std::string& val);
+	LogFormatter::ptr getFormatter();
+
 	const std::string& getName() { return m_name; }
 
+
+
 private:
+	friend class LogManager;
 	std::string m_name;	 			 				// logger's name
 	LogLevel::level m_level; 			 			// log level  debug
 	std::list<LogAppender::ptr> m_appenders;        // appender list
 	LogFormatter::ptr m_formatter;					// share with appender in appenders of it doesn't have formatter
+	Logger::ptr m_root;
 };
 
 // Appender that sends output to console
@@ -224,4 +241,3 @@ typedef sylar::Singleton<LogManager> LoggerMgr;
 };
 
 #endif
-
