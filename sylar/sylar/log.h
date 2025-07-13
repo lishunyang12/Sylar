@@ -326,89 +326,41 @@ protected:
 };
 
 /**
- * @class Logger  
- * @brief Central logging class that handles message processing and routing
- *
- * Features:
- * - Hierarchical naming system (e.g. "system.network.tcp")
- * - Log level filtering
- * - Multiple output destinations (appenders)
- * - Thread-safe operations
- * - Shared ownership support via enable_shared_from_this
+ * Central logging class that handles message processing and routing.
+ * Supports hierarchical naming, level filtering, and multiple output destinations.
  */
 class Logger : public std::enable_shared_from_this<Logger> {
 public:
-    /// Shared pointer type for safe memory management
     typedef std::shared_ptr<Logger> ptr;
 
-    /**
-     * @brief Construct a new Logger
-     * @param name Logger name (default: "root")
-     *
-     * The name can use dot notation for hierarchy (e.g. "system.network")
-     * Child loggers inherit appenders from parents by default.
-     */
     explicit Logger(const std::string& name = "root");
     
-    /**
-     * @brief Process a log event at specified level
-     * @param level Severity level of the message
-     * @param event The log event to process
-     *
-     * Routes the message to all appenders that meet level requirements.
-     */
     void log(LogLevel::level level, LogEvent::ptr event);
 
-    /// @brief Log a DEBUG level message
+    // Log methods for standard levels
     void debug(LogEvent::ptr event);
-    /// @brief Log an INFO level message  
-    void info(LogEvent::ptr event);
-    /// @brief Log a WARN level message
+    void info(LogEvent::ptr event); 
     void warn(LogEvent::ptr event);
-    /// @brief Log an ERROR level message
     void error(LogEvent::ptr event);
-    /// @brief Log a FATAL level message
     void fatal(LogEvent::ptr event);
 
-    /**
-     * @brief Add an output destination
-     * @param appender Appender to add (console, file, etc)
-     *
-     * The logger takes shared ownership of the appender.
-     */
+    // Appender management
     void addAppender(LogAppender::ptr appender);
-
-    /**
-     * @brief Remove an output destination  
-     * @param appender Appender to remove
-     */
     void delAppender(LogAppender::ptr appender);
 
-    /**
-     * @brief Get current log level threshold
-     * @return Minimum level that will be processed
-     */
+    // Level configuration
     LogLevel::level getLevel() const { return m_level; }
-
-    /**
-     * @brief Set log level threshold
-     * @param val New minimum level to process
-     */
     void setLevel(LogLevel::level val) { m_level = val; }
 
-    /**
-     * @brief Get logger name
-     * @return Const reference to the logger name string
-     */
     const std::string& getName() { return m_name; }
 
 private:
-	friend class LoggerManager;
-    std::string m_name;                 ///< Hierarchical logger name
-    LogLevel::level m_level;            ///< Minimum log level threshold
-    std::list<LogAppender::ptr> m_appenders;  ///< Output destinations
-    LogFormatter::ptr m_formatter;      ///< Default formatter for appenders
-	Logger::ptr m_root;
+    friend class LoggerManager;
+    std::string m_name;                 // Hierarchical name (e.g. "system.network")
+    LogLevel::level m_level = LogLevel::DEBUG;
+    std::list<LogAppender::ptr> m_appenders;
+    LogFormatter::ptr m_formatter;      // Default format for appenders without their own
+    Logger::ptr m_root;                 // Fallback logger when no appenders are configured
 };
 
 /**
@@ -438,48 +390,32 @@ public:
 };
 
 /**
- * @class FileLogAppender  
- * @brief Log appender that writes to file
- *
- * Features:
- * - File rotation support via reopen()
- * - Automatic flushing
- * - Thread-safe writes
+ * Thread-safe file logging with rotation support.
+ * Automatically flushes writes to disk.
  */
 class FileLogAppender : public LogAppender {
 public:
-    typedef std::shared_ptr<FileLogAppender> ptr;
+    using ptr = std::shared_ptr<FileLogAppender>;
     
     /**
-     * @brief Construct a file appender
-     * @param filename Path to log file
+     * Opens specified log file for writing.
      * @throws std::ios_base::failure if file cannot be opened
      */
     explicit FileLogAppender(const std::string& filename);
     
-    /**
-     * @brief Process and write log event to file
-     * @param logger Source logger instance  
-     * @param level Log severity level
-     * @param event Log event data
-     */
     virtual void log(std::shared_ptr<Logger> logger,
-                   LogLevel::level level, 
-                   LogEvent::ptr event) override;
-    
+            LogLevel::level level,
+            LogEvent::ptr event) override;
+
     /**
-     * @brief Reopen the log file (for rotation)
-     * @return true if successful, false on error
-     *
-     * Typical usage:
-     * 1. Rename current log file
-     * 2. Call reopen() to create new file
+     * Reopens log file, typically after rotation.
+     * @return false if file couldn't be reopened
      */
     bool reopen();
 
 private:
-    std::string m_filename;       ///< Log file path
-    std::ofstream m_filestream;   ///< File stream handle
+    std::string m_filename;
+    std::ofstream m_filestream;
 };
 
 /**

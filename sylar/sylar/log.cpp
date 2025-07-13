@@ -169,7 +169,7 @@ class TabFormatItem: public LogFormatter::FormatItem {
 Logger::Logger(const std::string& name) 
     : m_name(name) 
     , m_level(LogLevel::DEBUG){
-    m_formatter.reset(new LogFormatter("%d{%Y-%m-%d %H:%M:%S}%T%t%T%F%T[%p]%T[%c]%T%f:%l%T%m%n"));
+    m_formatter.reset(new LogFormatter("%d{%Y-%m-%d %H:%M:%S}%T%t%T%F%T[%p]%T[%c]%T%f:%l%T%m%n"));   // default formatter for appenders if their formatter is null
 }
 //%d{%Y-%m-%d %H:%M:%S}%T%t%T%F%T%[p]%T%[%c]%T%f:%l%T%m%n
 
@@ -238,6 +238,7 @@ FileLogAppender::FileLogAppender(const std::string& filename)
     }
 }
 
+// This pattern is useful for log rotation or when you need to reopen a log file after it might have been moved/deleted
 bool FileLogAppender::reopen() {
     if (m_filestream) {
         m_filestream.close();
@@ -261,7 +262,12 @@ std::string LogFormatter::format(std::shared_ptr<Logger> logger, LogLevel::level
 
 
 // Log format parser state machine
-  // m_pattern = "%d [%p] %f %m %n“ -> liternal(string) -> tokens(tuple) -> m_items  What is the size of m_items? 
+  // m_pattern = "%d [%p] %f %m %n“ -> liternal(string) -> tokens(tuple) -> m_items 
+
+//   m_pattern (string)  
+//     → tokens (parsed elements)  
+//     → m_items (executable FormatItems)  
+//     → formatted output
 void LogFormatter::init() {
     // str, format, type
     std::vector<std::tuple<std::string, std::string, int>> tokens;
@@ -430,7 +436,7 @@ void LogFormatter::init() {
             if (it == s_format_items.end()) {
                 m_items.emplace_back(FormatItem::ptr(new StringFormatItem("<<error_format %" + std::get<0>(i) + ">>")));
             } else {
-                m_items.push_back(it->second(std::get<1>(i)));
+                m_items.emplace_back(it->second(std::get<1>(i)));
             }
         }
         //std::cout << "{"<< std::get<0>(i) << "} - {" << std::get<1>(i) << "} - {" << std::get<2>(i) << "}"<< std::endl;
@@ -456,11 +462,17 @@ Logger::ptr LoggerManager::getLogger(const std::string& name) {
 }
 
 struct LogAppenderDefine {
-
+    int type = 0; // 1 File, 2 Stdout
+    LogLevel::level level = LogLevel::UNKNOWN;
+    std::string formatter;
+    std::string file;
 };
 
 struct LogDefine {
-
+    std::string name;
+    LogLevel::level level = LogLevel::UNKNOWN;
+    std::string formatter;
+    std::vector<LogAppenderDefine> appenders;
 };
 
 void LoggerManager::init() {
@@ -469,3 +481,93 @@ void LoggerManager::init() {
 
 
 };
+
+
+// Phase 1: Logger Initialization (Setup)
+// 1. LoggerManager Initialization
+//    │
+//    ├─ 1.1. Create root logger ("root")
+//    │    ├─ Sets default log level (e.g., DEBUG)
+//    │    └─ Assigns default formatter (e.g., "%d [%p] %m%n")
+//    │
+//    ├─ 1.2. Register appenders (optional)
+//    │    ├─ StdoutAppender (console)
+//    │    └─ FileAppender ("app.log")
+//    │
+//    └─ 1.3. Hierarchical logger creation
+//         ├─ e.g., getLogger("network.http") creates:
+//         │    ├─ Logger("network")
+//         │    └─ Logger("network.http")
+//         └─ Child loggers inherit parent appenders/level unless overridden
+
+
+
+
+
+// Phase 2: Pattern Parsing (LogFormatter Init)
+// 2. LogFormatter Initialization (when setFormatter() is called)
+//    │
+//    ├─ 2.1. Parse m_pattern into tokens
+//    │    ├─ State machine processes:
+//    │    │    ├─ Literals (e.g., " [" → StringFormatItem)
+//    │    │    └─ Specifiers (e.g., "%d" → DateTimeFormatItem)
+//    │    └─ Handles nested formats (e.g., "%d{%Y-%m-%d}")
+//    │
+//    ├─ 2.2. Compile tokens into FormatItems
+//    │    ├─ Uses s_format_items map to resolve specifiers:
+//    │    │    ├─ e.g., "d" → DateTimeFormatItem(fmt_str)
+//    │    │    └─ Unknown specifiers → Error StringFormatItem
+//    │    └─ Stores compiled items in m_items vector
+//    │
+//    └─ 2.3. Validation
+//         ├─ Invalid patterns fail fast (e.g., unclosed "%d{")
+//         └─ Debuggable token stream (for development)
+
+
+
+
+
+// Phase 3: Logging Execution (Runtime)
+// ├── 3.1.1 Macro Expansion
+// │    ├── Level Check: logger->getLevel() <= log_level
+// │    └── Construct LogEvent: Captures (metadata + message)
+// │
+// ├── 3.1.2 LogEventWrap (RAII)
+// │    └── On destruction: Invokes logger->log()
+// │
+// └── 3.1.3 Logger Processing
+//      ├── Routing Logic:
+//      │    ├── Primary: Forward to appenders where appender->getLevel() <= log_level
+//      │    └── Fallback: Route to root logger if no appenders available
+//      │
+//      └── Appender Pipeline
+//           ├── 3.1.3.1 Formatter Selection
+//           │    ├── Priority: appender->m_formatter
+//           │    └── Default: logger->m_formatter
+//           │
+//           ├── 3.1.3.2 Message Formatting
+//           │    ├── Process FormatItems:
+//           │    │    └── Each item appends to stringstream (e.g., %d → datetime)
+//           │    └── Example: "%d [%p] %m" → "2023-01-01 14:30 [INFO] Hello"
+//           │
+//           └── 3.1.3.3 Output Dispatch
+//                ├── StdoutAppender: std::cout
+//                ├── FileAppender: ofstream (with rotation)
+//                └── CustomAppenders:
+//                     ├── Network: Socket transmission
+//                     ├── Database: SQL/NoSQL write
+//                     └── Syslog: System logging
+
+
+
+
+// Phase 4: Output Examples
+// 4.1. Console Output (StdoutAppender)
+//      │
+//      ├─ Formatted: "2023-01-01 [INFO] main.cpp:42 User connected"
+//      └─ Written to stdout (colored if enabled)
+
+// 4.2. File Output (FileAppender)
+//      │
+//      ├─ Formatted: "2023-01-01T12:00:00 [INFO] thread=1234 file=main.cpp:42 msg='User connected'"
+//      └─ Appended to "app.log" (with rotation)
