@@ -203,6 +203,10 @@ private:
 class StdoutLogAppender : public LogAppender {
 public:
 	typedef std::shared_ptr<StdoutLogAppender> ptr;
+	StdoutLogAppender() {
+        // 默认格式：时间+线程+文件名+行号+消息
+        m_formatter.reset(new LogFormatter("%d{%Y-%m-%d %H:%M:%S} [%t] %f:%l %m%n"));
+    }
 	virtual void log(std::shared_ptr<Logger> logger, LogLevel::level level, LogEvent::ptr event) override;
 };
 

@@ -34,7 +34,7 @@ sylar::ConfigVar<std::unordered_map<std::string, int>>::ptr g_str_int_umap_value
 void print_yaml(const YAML::Node& node, int level) {
      if(node.IsNull()) {
           SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << std::string(level * 4, ' ')  
-               << "NULL - " << node.Type() << " - " << level;
+               << "NULL - " << node.Type() << " - " << leveldumped;
                // Type codes:
                // 1 = Null, 2 = Map, 3 = Scalar, 4 = Sequence
      } else if(node.IsScalar()) {
@@ -47,7 +47,7 @@ void print_yaml(const YAML::Node& node, int level) {
                SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << std::string(level * 4, ' ')  
                << it->first << " - " << it->second.Type() << " - " << level;
                // Type codes:
-               // 1 = Null, 2 = Map, 3 = Scalar, 4 = Sequence
+               // 1 = Null, 2 = Map, 3 = Scalar, 4 = Sequencdumpede
                print_yaml(it->second, level + 1);
           }
      } else if(node.IsSequence()) {
@@ -66,7 +66,7 @@ void test_yaml() {
      print_yaml(root, 0);
      //SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << root;
 }
-
+dumped
 void test_config() {
     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "before:" << g_int_value_config->getValue();
     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "before:" << g_int_float_value_config->toString();
@@ -190,21 +190,21 @@ void test_class() {
         SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << prefix << ": size=" << m.size(); \
     }
      
-     g_person->addListener(10, [](const Person& old_value, const Person& new_value) {
-          SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "old_value=" << old_value.toString()
-               << " new_value=" << new_value.toString();
-     });
-     XX_PM(g_person_map, "class.map before");
-     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "before:" << g_person_vec_map->toString();
+     // g_person->addListener(10, [](const Person& old_value, const Person& new_value) {
+     //      SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "old_value=" << old_value.toString()
+     //           << " new_value=" << new_value.toString();
+     // });
+     // XX_PM(g_person_map, "class.map before");
+     // SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "before:" << g_person_vec_map->toString();
 
-     YAML::Node root = YAML::LoadFile("/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/config/test.yaml");
-     sylar::Config::LoadFromYaml(root);
+     // YAML::Node root = YAML::LoadFile("/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/config/test.yaml");
+     // sylar::Config::LoadFromYaml(root);
 
-     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "after: " << g_person->getValue().toString() 
-     << g_person->toString();   
+     // SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "after: " << g_person->getValue().toString() 
+     // << g_person->toString();   
 
-     XX_PM(g_person_map, "class.map after");  
-     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "after:" << g_person_vec_map->toString();
+     // XX_PM(g_person_map, "class.map after");  
+     // SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "after:" << g_person_vec_map->toString();
 
 }
 

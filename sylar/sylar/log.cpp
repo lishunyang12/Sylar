@@ -259,6 +259,10 @@ void Logger::fatal(LogEvent::ptr event) {
 
 
 void StdoutLogAppender::log(std::shared_ptr<Logger> logger, LogLevel::level level, LogEvent::ptr event) {
+    if(!m_formatter) {
+        std::cout << event->getContent() << std::endl;
+        return;
+    }
     if (level >= m_level) {
         std::string str = m_formatter->format(logger, level, event);
         std::cout << str << std::endl;
@@ -276,6 +280,7 @@ FileLogAppender::FileLogAppender(const std::string& filename)
     if (!reopen()) {  
         throw std::runtime_error("Failed to create log file: " + filename);
     }
+    m_formatter.reset(new LogFormatter("%d{%Y-%m-%d %H:%M:%S} [%t] %f:%l %m%n"));
 }
 
 bool FileLogAppender::reopen() {
@@ -519,6 +524,7 @@ struct LogDefine {
     LogLevel::level level = LogLevel::UNKNOWN;
     std::string formatter;
     std::vector<LogAppenderDefine> appenders;
+    std::string file;
 
     bool operator==(const LogDefine& oth) const {
         return name == oth.name
@@ -565,14 +571,14 @@ public:
                     LogAppenderDefine lad;
                     if(type == "FileLogAppender") {
                         lad.type = 1;
-                        if(!n["file"].IsDefined()) {
+                        if(!a["file"].IsDefined()) {
                             std::cout << "log config error: fileappender file is null, " << n
                             << std::endl;
                             continue;
                         }
-                        lad.file = n["file"].as<std::string>();
-                        if(n["formatter"].IsDefined()) {
-                            lad.formatter = n["formatter"].as<std::string>();
+                        lad.file = a["file"].as<std::string>();
+                        if(a["formatter"].IsDefined()) {
+                            lad.formatter = a["formatter"].as<std::string>();
                         }
                     } else if(type == "stdoutLogAppender") {
                         lad.type = 2;
@@ -598,8 +604,32 @@ public:
     std::string operator() (const std::set<LogDefine>& v) {
         YAML::Node node;
         for(auto& i : v) {
-            node.push_back(YAML::Load(LexicalCast<LogDefine, std::string>()(i)));
-        }
+            YAML::Node n;
+            n["name"] = i.name;
+            n["level"] = LogLevel::ToString(i.level);
+
+            if(i.formatter.empty()) {
+                n["level"] = i.formatter;
+            }
+
+            for(auto& a : i.appenders) {
+                YAML::Node na;
+                if(a.type == 1) {
+                    na["type"] = "FileLogAppender";
+                    na["file"] = a.file;
+                } else if(a.type == 2) {
+                    na["type"] = "StdoutAppender";
+                }
+                na["level"] = LogLevel::ToString(a.level);
+
+                if(!a.formatter.empty()) {
+                    na["formatter"] = a.formatter;
+                }
+
+                n["appenders"].push_back(na);
+            }
+            node.push_back(n);
+        } 
         std::stringstream ss;
         ss << node;
         return ss.str();
