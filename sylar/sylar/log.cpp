@@ -2,6 +2,7 @@
 #include "map"
 #include "functional"
 #include "iostream"
+#include "config.h"
 
 namespace sylar {
 
@@ -170,6 +171,7 @@ Logger::Logger(const std::string& name)
     : m_name(name) 
     , m_level(LogLevel::DEBUG){
     m_formatter.reset(new LogFormatter("%d{%Y-%m-%d %H:%M:%S}%T%t%T%F%T[%p]%T[%c]%T%f:%l%T%m%n"));   // default formatter for appenders if their formatter is null
+
 }
 //%d{%Y-%m-%d %H:%M:%S}%T%t%T%F%T%[p]%T%[%c]%T%f:%l%T%m%n
 
@@ -466,6 +468,13 @@ struct LogAppenderDefine {
     LogLevel::level level = LogLevel::UNKNOWN;
     std::string formatter;
     std::string file;
+
+     bool operator==(const LogAppenderDefine& oth) const {
+        return type == oth.type
+            && level == oth.level
+            && formatter == oth.formatter
+            && file == oth.file;
+    }
 };
 
 struct LogDefine {
@@ -473,7 +482,53 @@ struct LogDefine {
     LogLevel::level level = LogLevel::UNKNOWN;
     std::string formatter;
     std::vector<LogAppenderDefine> appenders;
+
+   bool operator==(const LogDefine& oth) {
+        return name == oth.name
+            && level == oth.level
+            && formatter == oth.formatter
+            && appenders == oth.appenders;
+   }
+
+   bool operator<(const LogDefine& oth) const {
+        return name < oth.name;
+   }
 };
+
+sylar::ConfigVar<std::set<LogDefine>> g_log_defines = 
+    sylar::Config::Lookup("logs", std::vector<LogDefine>{}, "logs config");
+
+struct LogIniter {
+    LogIniter() {
+        g_log_defines->addListener(0xF1E231, [](const std::set<LogDefine>& old_value, const std::set<LogDefine>& new_value){
+            // 新增
+            for(auto& i : new_value) {
+                auto it = old_value.find(i);
+                if(it == old_value.end()) {
+                    //新增logger
+                    
+                } else {
+                    if(!(i == *it)) {
+                        //修改logger
+
+                    }
+                }
+            }
+
+            for(auto& i : old_value) {
+                auto it = new_value.find(i);
+                if(it == new_value.end()) {
+                    //删除logger
+                    auto logger = SYLAR_LOG_NAME(i.name);
+                    logger->setLevel((LogLevel::level)100);
+                    logger->clearAppenders();
+                }
+            } 
+        })
+    }
+};
+
+static LogIniter __log_init;
 
 void LoggerManager::init() {
 

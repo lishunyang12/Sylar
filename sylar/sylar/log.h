@@ -347,7 +347,7 @@ public:
     // Appender management
     void addAppender(LogAppender::ptr appender);
     void delAppender(LogAppender::ptr appender);
-
+    void clearAppenders() { m_appenders.clear(); }
     // Level configuration
     LogLevel::level getLevel() const { return m_level; }
     void setLevel(LogLevel::level val) { m_level = val; }
