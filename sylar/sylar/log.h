@@ -55,10 +55,12 @@
 
 // Root logger access  
 #define SYLAR_LOG_ROOT() sylar::LoggerMgr::GetInstance()->getRoot()
+#define SYLAR_LOG_NAME(name) sylar::LoggerMgr::GetInstance()->getLogger(name);
 
 namespace sylar {
 
 class Logger;
+class LoggerManager;
 
 /**
  * @enum LogLevel::level
@@ -401,10 +403,12 @@ public:
     const std::string& getName() { return m_name; }
 
 private:
+	friend class LoggerManager;
     std::string m_name;                 ///< Hierarchical logger name
     LogLevel::level m_level;            ///< Minimum log level threshold
     std::list<LogAppender::ptr> m_appenders;  ///< Output destinations
     LogFormatter::ptr m_formatter;      ///< Default formatter for appenders
+	Logger::ptr m_root;
 };
 
 /**
@@ -479,7 +483,7 @@ private:
 };
 
 /**
- * @class LogManager
+ * @class LoggerManager
  * @brief Central registry and factory for logger instances
  *
  * Implements:
@@ -487,7 +491,7 @@ private:
  * - Hierarchical logger creation
  * - Default configuration
  */
-class LogManager {
+class LoggerManager {
 public:
     /**
      * @brief Get or create named logger
@@ -516,17 +520,17 @@ public:
     Logger::ptr getRoot() const { return m_root; }
 
 private:
-    friend class sylar::Singleton<LogManager>;
+    friend class sylar::Singleton<LoggerManager>;
     
-    LogManager();  ///< Private constructor for singleton
-    ~LogManager() = default;
+    LoggerManager();  ///< Private constructor for singleton
+    ~LoggerManager() = default;
     
     std::map<std::string, Logger::ptr> m_loggers; ///< Logger registry
     Logger::ptr m_root;                           ///< Root logger instance
 };
 
-/// Global singleton accessor for LogManager
-typedef sylar::Singleton<LogManager> LoggerMgr;
+/// Global singleton accessor for LoggerManager
+typedef sylar::Singleton<LoggerManager> LoggerMgr;
 
 };
 
