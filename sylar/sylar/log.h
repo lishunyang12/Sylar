@@ -14,12 +14,21 @@
 #include "util.h"
 #include "singleton.h"
 
+/**
+ * @def SYLAR_LOG_LEVEL(logger, level)
+ * @brief Base logging macro for specified level
+ * 
+ * Usage: SYLAR_LOG_LEVEL(logger_ptr, level) << "message";
+ * 
+ * Only evaluates if logger's level threshold permits
+ */
 #define SYLAR_LOG_LEVEL(logger, level) \
-	if(logger->getLevel() <= level) \
-		sylar::LogEventWrap(sylar::LogEvent::ptr(new sylar::LogEvent(logger, level, \
-		  __FILE__, __LINE__, 0, sylar::GetThreadId(), \
-			sylar::GetFiberId(), time(0)))).getSS()
+    if(logger->getLevel() <= level) \
+        sylar::LogEventWrap(sylar::LogEvent::ptr(new sylar::LogEvent(logger, level, \
+          __FILE__, __LINE__, 0, sylar::GetThreadId(), \
+            sylar::GetFiberId(), time(0)))).getSS()
 
+// Convenience macros for standard levels
 #define SYLAR_LOG_DEBUG(logger) SYLAR_LOG_LEVEL(logger, sylar::LogLevel::DEBUG)
 #define SYLAR_LOG_INFO(logger) SYLAR_LOG_LEVEL(logger, sylar::LogLevel::INFO)
 #define SYLAR_LOG_WARN(logger) SYLAR_LOG_LEVEL(logger, sylar::LogLevel::WARN)
@@ -31,37 +40,70 @@
 		sylar::LogEventWrap(sylar::LogEvent::ptr(new sylar::LogEvent(logger, level, \
 			__FILE__, __LINE__, 0, sylar::GetThreadId(), \
 		sylar::GetFiberId(), time(0)))).getEvent()->format(fmt, __VA_ARGS__)
-	
+
+/**
+ * @def SYLAR_LOG_FMT_LEVEL(logger, level, fmt, ...)
+ * @brief Formatted logging macro for specified level
+ * 
+ * Usage: SYLAR_LOG_FMT_LEVEL(logger, level, "format %s", arg)
+ */
 #define SYLAR_LOG_FMT_DEBUG(logger, fmt, ...)  SYLAR_LOG_FMT_LEVEL(logger, sylar::LogLevel::DEBUG, fmt, __VA_ARGS__)
 #define SYLAR_LOG_FMT_INFO(logger, fmt, ...)   SYLAR_LOG_FMT_LEVEL(logger, sylar::LogLevel::INFO, fmt, __VA_ARGS__)
 #define SYLAR_LOG_FMT_WARN(logger, fmt, ...)   SYLAR_LOG_FMT_LEVEL(logger, sylar::LogLevel::WARN, fmt, __VA_ARGS__)
 #define SYLAR_LOG_FMT_ERROR(logger, fmt, ...)  SYLAR_LOG_FMT_LEVEL(logger, sylar::LogLevel::ERROR, fmt, __VA_ARGS__)
 #define SYLAR_LOG_FMT_FATAL(logger, fmt, ...)  SYLAR_LOG_FMT_LEVEL(logger, sylar::LogLevel::FATAL, fmt, __VA_ARGS__)
 
+// Root logger access  
 #define SYLAR_LOG_ROOT() sylar::LoggerMgr::GetInstance()->getRoot()
 
 namespace sylar {
 
 class Logger;
 
-// log level
+/**
+ * @enum LogLevel::level
+ * @brief Log severity levels
+ */
 class LogLevel {
 public:
-	enum level {
-		UNKNOWN = 0,
-		DEBUG = 1,
-		INFO = 2,
-		WARN = 3,
-		ERROR = 4,
-		FATAL = 5	
-	};
+    enum level {
+        UNKNOWN = 0,
+        DEBUG = 1,  ///< Debug-level messages
+        INFO = 2,   ///< Informational messages
+        WARN = 3,   ///< Warning conditions
+        ERROR = 4,  ///< Error conditions
+        FATAL = 5   ///< Fatal/critical conditions  
+    };
 
-	static const char* ToString(LogLevel::level level);
+    /// Convert level enum to string representation
+    static const char* ToString(LogLevel::level level);
 };
 
+/**
+ * @class LogEvent
+ * @brief Contains all data for a single log event
+ * 
+ * Captures:
+ * - Source location (file/line)
+ * - Timing information
+ * - Thread/fiber context
+ * - Message content
+ */
 class LogEvent {
 public:
     typedef std::shared_ptr<LogEvent> ptr;
+    
+    /**
+     * @brief Construct a new LogEvent
+     * @param logger Owning logger
+     * @param level Severity level
+     * @param file Source file
+     * @param line Source line
+     * @param elapse Milliseconds since program start
+     * @param thread_id OS thread ID
+     * @param fiber_id Application fiber ID
+     * @param time Unix timestamp
+     */
     LogEvent(std::shared_ptr<Logger> Logger, LogLevel::level level, const char* file, int32_t m_line, uint32_t elapse, 
             uint32_t thread_id, uint32_t fiber_id, uint64_t time)
         : m_file(file), 
@@ -101,124 +143,389 @@ private:
 	LogLevel::level m_level;
 };
 
+/**
+ * @class LogEventWrap
+ * @brief RAII wrapper for log events
+ * 
+ * Ensures log events are flushed when scope exits
+ */
 class LogEventWrap {
 public:
-	LogEventWrap(LogEvent::ptr m);
-	~LogEventWrap();
-
-	std::stringstream& getSS();
-	LogEvent::ptr getEvent() const;
+    LogEventWrap(LogEvent::ptr e);
+    ~LogEventWrap();
+    
+    std::stringstream& getSS();
+    LogEvent::ptr getEvent() const;
+    
 private:
-	LogEvent::ptr m_event;
+    LogEvent::ptr m_event;
 };
 
-// logformatter
+
+/**
+ * @class LogFormatter
+ * @brief Formats log messages according to a specified pattern string
+ *
+ * The formatter converts log events into human-readable strings using
+ * a pattern syntax similar to log4j/printf. Patterns contain literal
+ * text and format specifiers that get replaced with log event data.
+ */
 class LogFormatter {
 public:
-	typedef std::shared_ptr<LogFormatter> ptr;
-	LogFormatter(const std::string& pattern);
+    /// Shared pointer type for safe memory management
+    typedef std::shared_ptr<LogFormatter> ptr;
 
-	// %t	%thread_Id %m%n
-	std::string format(std::shared_ptr<Logger> logger, LogLevel::level level, LogEvent::ptr event);
-public:
-	class FormatItem {
-	public:
-		typedef std::shared_ptr<FormatItem> ptr;
-		FormatItem(const std::string& fmt = "");
-		virtual ~FormatItem() {}
-		virtual void format(std::ostream& os, std::shared_ptr<Logger> logger, LogLevel::level level, LogEvent::ptr event) = 0;
-	};
+    /**
+     * @brief Construct a new LogFormatter with the specified pattern
+     * @param pattern Format pattern string (e.g. "%d [%p] %m%n")
+     *
+     * Pattern syntax:
+     *   %m - Message content
+     *   %p - Log level (DEBUG/INFO/etc)
+     *   %r - Elapsed time since program start
+     *   %c - Logger name
+     *   %t - Thread ID
+     *   %n - Newline
+     *   %d - Date/time (with optional format: %d{format})
+     *   %f - Filename
+     *   %l - Line number
+     *   %F - Fiber ID
+     *   %% - Percent sign
+     */
+    explicit LogFormatter(const std::string& pattern);
 
-	void init();
+    /**
+     * @brief Format a log event into a string according to the pattern
+     * @param logger Source logger
+     * @param level Log severity level
+     * @param event Log event data
+     * @return Formatted log message string
+     */
+    std::string format(std::shared_ptr<Logger> logger, 
+                      LogLevel::level level, 
+                      LogEvent::ptr event);
+
+    /**
+     * @class FormatItem
+     * @brief Abstract base class for pattern format items
+     *
+     * Each format specifier (%d, %p etc) has a corresponding FormatItem
+     * subclass that knows how to render that piece of log data.
+     */
+    class FormatItem {
+    public:
+        typedef std::shared_ptr<FormatItem> ptr;
+        
+        /**
+         * @brief Construct a new FormatItem
+         * @param fmt Optional format string for complex items (like date formatting)
+         */
+        explicit FormatItem(const std::string& fmt = "");
+        
+        virtual ~FormatItem() = default;
+        
+        /**
+         * @brief Format this item's data into the output stream
+         * @param os Output stream to write to
+         * @param logger Source logger
+         * @param level Log severity level
+         * @param event Log event data
+         */
+        virtual void format(std::ostream& os,
+                           std::shared_ptr<Logger> logger,
+                           LogLevel::level level,
+                           LogEvent::ptr event) = 0;
+    };
+
+    /**
+     * @brief Initialize the formatter by parsing the pattern
+     * @throws std::runtime_error if pattern is invalid
+     *
+     * Splits the pattern into literal text and format items.
+     * Called automatically during construction.
+     */
+    void init();
 
 private:
-	std::string m_pattern;
-	std::vector<FormatItem::ptr> m_items;
+    std::string m_pattern;              ///< Original pattern string
+    std::vector<FormatItem::ptr> m_items; ///< Parsed format items
 };
 
-// logger destination 
+/**
+ * @class LogAppender
+ * @brief Abstract base class for all log output destinations
+ *
+ * Defines the interface for log appenders that handle:
+ * - Writing log messages to specific outputs (console, file, network, etc)
+ * - Filtering by log level
+ * - Formatting log events using a LogFormatter
+ */
 class LogAppender {
 public:
-	typedef std::shared_ptr<LogAppender> ptr;
-	virtual ~LogAppender() {};
-	
-	void setFormatter(LogFormatter::ptr val) { m_formatter = val; }
-	LogFormatter::ptr getFormatter() const { return m_formatter; }
+    /// Shared pointer type for safe memory management
+    typedef std::shared_ptr<LogAppender> ptr;
 
-	LogLevel::level getLevel() { return m_level; }
-	void setLevel(LogLevel::level val) { m_level = val; }
-	virtual void log(std::shared_ptr<Logger> Logger, LogLevel::level sslevel, LogEvent::ptr event) = 0;
+    /// Virtual destructor for polymorphic deletion
+    virtual ~LogAppender() = default;
+
+    /**
+     * @brief Set the formatter for this appender
+     * @param val Formatter to use for converting log events to strings
+     *
+     * The formatter controls the textual representation of log messages.
+     * Can be shared between multiple appenders.
+     */
+    void setFormatter(LogFormatter::ptr val) { m_formatter = val; }
+
+    /**
+     * @brief Get the current formatter
+     * @return Current log formatter
+     */
+    LogFormatter::ptr getFormatter() const { return m_formatter; }
+
+    /**
+     * @brief Get the minimum log level for this appender
+     * @return Current log level threshold
+     *
+     * Only messages at or above this level will be processed.
+     */
+    LogLevel::level getLevel() { return m_level; }
+
+    /**
+     * @brief Set the minimum log level for this appender
+     * @param val New log level threshold
+     *
+     * Example:
+     *   appender->setLevel(LogLevel::WARN); // Only log warnings and errors
+     */
+    void setLevel(LogLevel::level val) { m_level = val; }
+
+    /**
+     * @brief Process a log event (pure virtual)
+     * @param logger Source logger that generated the event
+     * @param level Severity level of the log event
+     * @param event The log event data to process
+     *
+     * Derived classes must implement this to:
+     * 1. Apply level filtering (if not already done)
+     * 2. Format the message (using m_formatter)
+     * 3. Write to the appropriate output destination
+     */
+    virtual void log(std::shared_ptr<Logger> logger, 
+                    LogLevel::level level, 
+                    LogEvent::ptr event) = 0;
 
 protected:
-	LogLevel::level m_level = LogLevel::DEBUG; //debug
-	LogFormatter::ptr m_formatter;  
+    /// Minimum log level for this appender (default: DEBUG)
+    LogLevel::level m_level = LogLevel::DEBUG;
+
+    /// Formatter used to convert log events to strings
+    LogFormatter::ptr m_formatter;
 };
 
-// logger
-class Logger :public std::enable_shared_from_this<Logger> {
+/**
+ * @class Logger  
+ * @brief Central logging class that handles message processing and routing
+ *
+ * Features:
+ * - Hierarchical naming system (e.g. "system.network.tcp")
+ * - Log level filtering
+ * - Multiple output destinations (appenders)
+ * - Thread-safe operations
+ * - Shared ownership support via enable_shared_from_this
+ */
+class Logger : public std::enable_shared_from_this<Logger> {
 public:
-	typedef std::shared_ptr<Logger> ptr;
+    /// Shared pointer type for safe memory management
+    typedef std::shared_ptr<Logger> ptr;
 
-	Logger(const std::string& name = "root");	
-	void log(LogLevel::level, LogEvent::ptr event);
+    /**
+     * @brief Construct a new Logger
+     * @param name Logger name (default: "root")
+     *
+     * The name can use dot notation for hierarchy (e.g. "system.network")
+     * Child loggers inherit appenders from parents by default.
+     */
+    explicit Logger(const std::string& name = "root");
+    
+    /**
+     * @brief Process a log event at specified level
+     * @param level Severity level of the message
+     * @param event The log event to process
+     *
+     * Routes the message to all appenders that meet level requirements.
+     */
+    void log(LogLevel::level level, LogEvent::ptr event);
 
-	void debug(LogEvent::ptr event);
-	void info(LogEvent::ptr event);
-	void warn(LogEvent::ptr event);
-	void error(LogEvent::ptr event);
-	void fatal(LogEvent::ptr event);
+    /// @brief Log a DEBUG level message
+    void debug(LogEvent::ptr event);
+    /// @brief Log an INFO level message  
+    void info(LogEvent::ptr event);
+    /// @brief Log a WARN level message
+    void warn(LogEvent::ptr event);
+    /// @brief Log an ERROR level message
+    void error(LogEvent::ptr event);
+    /// @brief Log a FATAL level message
+    void fatal(LogEvent::ptr event);
 
-	void addAppender(LogAppender::ptr appender);
-	void delAppender(LogAppender::ptr appender);
-	LogLevel::level getLevel() const { return m_level; }
-	void setLevel(LogLevel::level val) { m_level = val; }
+    /**
+     * @brief Add an output destination
+     * @param appender Appender to add (console, file, etc)
+     *
+     * The logger takes shared ownership of the appender.
+     */
+    void addAppender(LogAppender::ptr appender);
 
-	const std::string& getName() { return m_name; }
+    /**
+     * @brief Remove an output destination  
+     * @param appender Appender to remove
+     */
+    void delAppender(LogAppender::ptr appender);
+
+    /**
+     * @brief Get current log level threshold
+     * @return Minimum level that will be processed
+     */
+    LogLevel::level getLevel() const { return m_level; }
+
+    /**
+     * @brief Set log level threshold
+     * @param val New minimum level to process
+     */
+    void setLevel(LogLevel::level val) { m_level = val; }
+
+    /**
+     * @brief Get logger name
+     * @return Const reference to the logger name string
+     */
+    const std::string& getName() { return m_name; }
 
 private:
-	std::string m_name;	 			 				// logger's name
-	LogLevel::level m_level; 			 			// log level  debug
-	std::list<LogAppender::ptr> m_appenders;        // appender list
-	LogFormatter::ptr m_formatter;					// share with appender in appenders of it doesn't have formatter
+    std::string m_name;                 ///< Hierarchical logger name
+    LogLevel::level m_level;            ///< Minimum log level threshold
+    std::list<LogAppender::ptr> m_appenders;  ///< Output destinations
+    LogFormatter::ptr m_formatter;      ///< Default formatter for appenders
 };
 
-// Appender that sends output to console
+/**
+ * @class StdoutLogAppender
+ * @brief Log appender that outputs to standard console stream
+ *
+ * Formats log messages and writes them to stdout/stderr
+ * based on log level. Thread-safe for concurrent logging.
+ */
 class StdoutLogAppender : public LogAppender {
 public:
-	typedef std::shared_ptr<StdoutLogAppender> ptr;
-	virtual void log(std::shared_ptr<Logger> logger, LogLevel::level level, LogEvent::ptr event) override;
+    typedef std::shared_ptr<StdoutLogAppender> ptr;
+    
+    /**
+     * @brief Process and output a log event
+     * @param logger Source logger instance
+     * @param level Log severity level
+     * @param event Log event data
+     *
+     * Writes formatted message to:
+     * - stdout for DEBUG/INFO/WARN  
+     * - stderr for ERROR/FATAL
+     */
+    virtual void log(std::shared_ptr<Logger> logger, 
+                   LogLevel::level level,
+                   LogEvent::ptr event) override;
 };
 
-// Appender that sends output to file
+/**
+ * @class FileLogAppender  
+ * @brief Log appender that writes to file
+ *
+ * Features:
+ * - File rotation support via reopen()
+ * - Automatic flushing
+ * - Thread-safe writes
+ */
 class FileLogAppender : public LogAppender {
 public:
-	typedef std::shared_ptr<FileLogAppender> ptr;
-	virtual void log(std::shared_ptr<Logger> logger, LogLevel::level level, LogEvent::ptr event) override;
-	FileLogAppender(const std::string& filename);
-
-	// reopen file, return true if successful, false if failed
-	bool reopen();
+    typedef std::shared_ptr<FileLogAppender> ptr;
+    
+    /**
+     * @brief Construct a file appender
+     * @param filename Path to log file
+     * @throws std::ios_base::failure if file cannot be opened
+     */
+    explicit FileLogAppender(const std::string& filename);
+    
+    /**
+     * @brief Process and write log event to file
+     * @param logger Source logger instance  
+     * @param level Log severity level
+     * @param event Log event data
+     */
+    virtual void log(std::shared_ptr<Logger> logger,
+                   LogLevel::level level, 
+                   LogEvent::ptr event) override;
+    
+    /**
+     * @brief Reopen the log file (for rotation)
+     * @return true if successful, false on error
+     *
+     * Typical usage:
+     * 1. Rename current log file
+     * 2. Call reopen() to create new file
+     */
+    bool reopen();
 
 private:
-	std::string m_filename;			// filename
-	std::ofstream m_filestream;		// file stream
+    std::string m_filename;       ///< Log file path
+    std::ofstream m_filestream;   ///< File stream handle
 };
 
+/**
+ * @class LogManager
+ * @brief Central registry and factory for logger instances
+ *
+ * Implements:
+ * - Logger singleton management
+ * - Hierarchical logger creation
+ * - Default configuration
+ */
 class LogManager {
 public:
-	Logger::ptr getLogger(const std::string& name);
-	void init();
-	Logger::ptr getRoot() const { return m_root; }
+    /**
+     * @brief Get or create named logger
+     * @param name Logger name (dot-separated hierarchy)
+     * @return Shared pointer to logger instance
+     *
+     * Creates parent loggers automatically if needed.
+     * Example: getLogger("system.network.tcp") creates 3 loggers.
+     */
+    Logger::ptr getLogger(const std::string& name);
+    
+    /**
+     * @brief Initialize logging system
+     *
+     * Sets up:
+     * - Root logger with default appenders  
+     * - Default formatters
+     * - System-wide log level
+     */
+    void init();
+    
+    /**
+     * @brief Get root logger instance
+     * @return Root logger shared pointer
+     */
+    Logger::ptr getRoot() const { return m_root; }
+
 private:
-	friend class sylar::Singleton<LogManager>;
-
-	std::map<std::string, Logger::ptr> m_loggers;
-	Logger::ptr m_root;
-
-	LogManager();
-	~LogManager() = default;
+    friend class sylar::Singleton<LogManager>;
+    
+    LogManager();  ///< Private constructor for singleton
+    ~LogManager() = default;
+    
+    std::map<std::string, Logger::ptr> m_loggers; ///< Logger registry
+    Logger::ptr m_root;                           ///< Root logger instance
 };
 
+/// Global singleton accessor for LogManager
 typedef sylar::Singleton<LogManager> LoggerMgr;
 
 };

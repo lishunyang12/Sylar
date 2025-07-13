@@ -150,8 +150,8 @@ public:
     std::string operator() (const Person& p) {
         YAML::Node node;
         node["name"] = p.m_name;
-        node["name"] = p.m_name;
-        node["name"] = p.m_name;
+        node["age"] = p.m_age;
+        node["sex"] = p.m_sex;
         std::stringstream ss;
         ss << node;
         return ss.str();
@@ -171,7 +171,7 @@ sylar::ConfigVar<std::map<std::string, std::vector<Person>>>::ptr g_person_vec_m
 
 
 void test_class() {
-     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "before: " << g_person->getValue().toString() 
+     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "before: " << g_person->getValue().toString() << " "
      << g_person->toString();
 
 #define XX_PM(g_var, prefix) \
@@ -184,8 +184,8 @@ void test_class() {
         SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << prefix << ": size=" << m.size(); \
     }
 
-     XX_PM(g_person_map, "class.map before");
-     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "before:" << g_person_vec_map->toString();
+     // XX_PM(g_person_map, "class.map before");
+     // SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "before:" << g_person_vec_map->toString();
 
      YAML::Node root = YAML::LoadFile("/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/config/log.yaml");
      sylar::Config::LoadFromYaml(root);
@@ -193,8 +193,8 @@ void test_class() {
      SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "after: " << g_person->getValue().toString() 
      << g_person->toString();   
 
-     XX_PM(g_person_map, "class.map after");  
-     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "after:" << g_person_vec_map->toString();
+     // XX_PM(g_person_map, "class.map after");  
+     // SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "after:" << g_person_vec_map->toString();
 
 }
 
