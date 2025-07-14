@@ -21,8 +21,12 @@ const char* LogLevel::ToString(LogLevel::level level) {
 
 LogLevel::level LogLevel::FromString(const std::string str) {
     if(str.empty()) return LogLevel::UNKNOWN;
+    std::string upper_str = str;
+    std::transform(upper_str.begin(), upper_str.end(), upper_str.begin(), 
+        [](unsigned char c) { return std::toupper(c); });
+
 #define XX(name) \
-    if(str == #name) { \
+    if(upper_str == #name) { \
         return LogLevel::name; \
     }
     XX(DEBUG);
