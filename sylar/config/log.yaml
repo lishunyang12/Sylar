@@ -5,7 +5,11 @@ logs:
     appenders:
       - type: FileLogAppender
         file: log.txt
+        level: info
+        formatter: ""
       - type: StdoutLogAppender
+        level: info
+        formatter: ""
 
   - name: system
     level: debug
@@ -13,5 +17,9 @@ logs:
     appenders:
       - type: FileLogAppender
         file: log.txt
+        level: info
+        formatter: ""
       - type: StdoutLogAppender
+        level: info
+        formatter: ""
 

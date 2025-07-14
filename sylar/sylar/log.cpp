@@ -3,6 +3,7 @@
 #include "functional"
 #include "iostream"
 #include "config.h"
+#include <cctype> 
 
 namespace sylar {
 
@@ -19,6 +20,7 @@ const char* LogLevel::ToString(LogLevel::level level) {
 }
 
 LogLevel::level LogLevel::FromString(const std::string str) {
+    if(str.empty()) return LogLevel::UNKNOWN;
 #define XX(name) \
     if(str == #name) { \
         return LogLevel::name; \
@@ -595,11 +597,11 @@ public:
             
             // Extract required fields with appropriate conversions
             ld.name = n["name"].as<std::string>();
-            ld.level = LogLevel::FromString(
-                n["level"].IsDefined() ? n["level"].as<std::string>() : ""
-            );
+
+            if(n["level"].IsDefined()) {
+                ld.level = LogLevel::FromString(n["level"].as<std::string>());
+            }
             
-            // Optional formatter field
             if(n["formatter"].IsDefined()) {
                 ld.formatter = n["formatter"].as<std::string>();
             }
@@ -608,37 +610,35 @@ public:
             if(n["appenders"].IsDefined()) {
                 for(size_t x = 0; x < n["appenders"].size(); ++x) {
                     auto a = n["appenders"][x];  
-                    
                     if(!a["type"].IsDefined()) {
                         std::cout << "log config error: appender type is null, "
-                                << a << std::endl;
+                                  << std::endl;
                         continue;
                     }
                     
-                    std::string type = a["type"].as<std::string>();
                     LogAppenderDefine lad;  
+                    std::string type = a["type"].as<std::string>();
                     
                     if(type == "FileLogAppender") {
                         lad.type = 1;  
-                        
                         if(!a["file"].IsDefined()) {
                             std::cout << "log config error: fileappender file is null"
                                       << std::endl;
                             continue;
                         }
                         lad.file = a["file"].as<std::string>();
-                        
-                        if(n["formatter"].IsDefined()) {
-                            lad.formatter = a["formatter"].as<std::string>();
-                        }
                     } else if(type == "StdoutLogAppender") {
                         lad.type = 2;  
-                    } else {
-                        std::cout << "log config error: appender type is invalid"
-                                  << std::endl;
-                        continue;
+                    }
+
+                    if(a["level"].IsDefined()) {
+                        lad.level = LogLevel::FromString(a["level"].as<std::string>());
                     }
                     
+                    if(a["formatter"].IsDefined()) {
+                        lad.formatter = a["formatter"].as<std::string>();
+                    }
+            
                     ld.appenders.emplace_back(lad);
                 }
             }
@@ -663,15 +663,17 @@ public:
             // NOTE: Currently missing other fields (level, formatter, appenders)
             // Should be expanded similar to the deserialization logic
             n["level"] = LogLevel::ToString(i.level);
-            n["formatter"] = i.formatter;
+            if(!i.formatter.empty()) {
+                n["formatter"] = i.formatter;
+            }
             
             for(auto& a : i.appenders) {
                 YAML::Node na;
                 if(a.type == 1) {
-                    na["type"] = "FileLogAppenders";
+                    na["type"] = "FileLogAppender";
                     na["file"] = a.file;
                 } else if(a.type == 2) {
-                    na["type"] = "StdoutLogAppenders";
+                    na["type"] = "StdoutLogAppender";
                 }
                 na["level"] = LogLevel::ToString(a.level);
                 if(!a.formatter.empty()) {
