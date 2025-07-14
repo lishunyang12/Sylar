@@ -281,7 +281,7 @@ public:
      * The formatter controls the textual representation of log messages.
      * Can be shared between multiple appenders.
      */
-    void setFormatter(LogFormatter::ptr val) { m_formatter = val; }
+    void setFormatter(LogFormatter::ptr val);
     void setFormatter(const std::string& val);
 
     /**
@@ -325,8 +325,10 @@ public:
     virtual std::string toYamlString() = 0;
 
 protected:
+    friend class Logger;
     /// Minimum log level for this appender (default: DEBUG)
     LogLevel::level m_level = LogLevel::DEBUG;
+    bool m_hasFormatter = false;
 
     /// Formatter used to convert log events to strings
     LogFormatter::ptr m_formatter;

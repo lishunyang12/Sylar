@@ -196,10 +196,13 @@ Logger::Logger(const std::string& name)
 
 void Logger::addAppender(LogAppender::ptr appender) {
     if(!appender->getFormatter()){
-            appender->setFormatter(m_formatter);
+            appender->m_formatter = m_formatter; 
+            // don't change hasFormatter status
+            // hasFormatter is still false
     }
     Logger::m_appenders.push_back(appender); 
 };
+
 void Logger::delAppender(LogAppender::ptr appender) {
     for(auto it = Logger::m_appenders.begin(); it != Logger::m_appenders.end(); ++it) {  
         if(*it == appender) {
@@ -237,12 +240,26 @@ void Logger::setFormatter(const std::string& val) {
 }
 
 void LogAppender::setFormatter(const std::string& val) {
-    sylar::LogFormatter::ptr new_val(new LogFormatter(val));
-    if(new_val->isError()) {
-        std::cout << "invalid formatter" << std::endl;
-        return;
+    if(val != "") {
+        sylar::LogFormatter::ptr new_val(new LogFormatter(val));
+        if(new_val->isError()) {
+            std::cout << "invalid formatter" << std::endl;
+            return;
+        }
+        m_formatter = new_val;
+        m_hasFormatter = true;
+    } else {
+        m_hasFormatter = false;
     }
-    m_formatter = new_val;
+}
+
+void LogAppender::setFormatter(LogFormatter::ptr val) { 
+    m_formatter = val; 
+    if(m_formatter) {
+        m_hasFormatter = true;
+    } else {
+        m_hasFormatter = false;
+    }
 }
 
 LogFormatter::ptr Logger::getFormatter() {
@@ -270,7 +287,7 @@ std::string FileLogAppender::toYamlString() {
     node["type"] = "StdoutLogAppender";
     node["file"] = m_filename;
     node["level"] = LogLevel::ToString(m_level);
-    if(m_formatter) {
+    if(m_hasFormatter && m_formatter) { // filter out logger's formatter
         node["formatter"] = m_formatter->getPattern();
     }
     std::stringstream ss;
@@ -290,7 +307,7 @@ std::string StdoutLogAppender::toYamlString() {
     node["type"] = "StdoutLogAppender";
     if(m_level != LogLevel::UNKNOWN)
     node["level"] = LogLevel::ToString(m_level);
-    if(m_formatter) {
+    if(m_hasFormatter && m_formatter) {  // filter out logger's formatter
         node["formatter"] = m_formatter->getPattern();
     }
     std::stringstream ss;
