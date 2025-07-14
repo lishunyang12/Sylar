@@ -227,6 +227,13 @@ void Logger::log(LogLevel::level level, LogEvent::ptr event) {
 
 void Logger::setFormatter(LogFormatter::ptr val) {
     m_formatter = val;
+
+    // appenders' formatter will also be affected if inherited from logger
+    for(auto& i : m_appenders) {
+        if(!i->m_hasFormatter) {
+            i->m_formatter = m_formatter;
+        }
+    }
 }
 void Logger::setFormatter(const std::string& val) {
     sylar::LogFormatter::ptr new_val(new sylar::LogFormatter(val));
@@ -236,14 +243,15 @@ void Logger::setFormatter(const std::string& val) {
                 << std::endl;
         return;
     }
-    m_formatter = new_val;
+    setFormatter(new_val);
 }
 
 void LogAppender::setFormatter(const std::string& val) {
     if(val != "") {
         sylar::LogFormatter::ptr new_val(new LogFormatter(val));
         if(new_val->isError()) {
-            std::cout << "invalid formatter" << std::endl;
+            std::cout << "invalid formatter- value: " << val 
+            << std::endl;
             return;
         }
         m_formatter = new_val;
@@ -761,7 +769,7 @@ struct LogIniter {
                     } else if(a.type == 2) {
                         ap.reset(new StdoutLogAppender);   
                     }
-                    ap->setLevel(a.level);            // ?? appender.formatter ??
+                    ap->setLevel(a.level);           
                     if(!a.formatter.empty()) {
                         ap->setFormatter(a.formatter);
                     }
