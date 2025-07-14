@@ -210,12 +210,14 @@ void test_class() {
 }
 
 void test_log() {
+     static sylar::Logger::ptr system_log = SYLAR_LOG_NAME("system");
+     SYLAR_LOG_INFO(system_log) << "hello system" << std::endl;
      std::cout << sylar::LoggerMgr::GetInstance()->toYamlString() << std::endl;
      YAML::Node root = YAML::LoadFile("/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/config/log.yaml");
      std::cout << "=============" << std::endl;
      sylar::Config::LoadFromYaml(root);
      std::cout << sylar::LoggerMgr::GetInstance()->toYamlString() << std::endl;
-
+     SYLAR_LOG_INFO(system_log) << "hello system" << std::endl;
 }
 
 int main(int argc, char** argv) {

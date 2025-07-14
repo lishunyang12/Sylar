@@ -4,7 +4,7 @@ logs:
     formatter: "%d%T%m%n"
     appenders:
       - type: FileLogAppender
-        file: log.txt
+        file: root.txt
         level: info
         formatter: ""
       - type: StdoutLogAppender
@@ -16,7 +16,7 @@ logs:
     formatter: "%d%T%m%n"
     appenders:
       - type: FileLogAppender
-        file: log.txt
+        file: system.txt
         level: info
         formatter: ""
       - type: StdoutLogAppender

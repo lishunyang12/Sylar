@@ -19,14 +19,13 @@ const char* LogLevel::ToString(LogLevel::level level) {
     }
 }
 
-LogLevel::level LogLevel::FromString(const std::string str) {
+LogLevel::level LogLevel::FromString(std::string str) {
     if(str.empty()) return LogLevel::UNKNOWN;
-    std::string upper_str = str;
-    std::transform(upper_str.begin(), upper_str.end(), upper_str.begin(), 
+    std::transform(str.begin(), str.end(), str.begin(), 
         [](unsigned char c) { return std::toupper(c); });
 
 #define XX(name) \
-    if(upper_str == #name) { \
+    if(str == #name) { \
         return LogLevel::name; \
     }
     XX(DEBUG);
@@ -280,6 +279,7 @@ void StdoutLogAppender::log(std::shared_ptr<Logger> logger, LogLevel::level leve
 std::string StdoutLogAppender::toYamlString() {
     YAML::Node node;
     node["type"] = "StdoutLogAppender";
+    if(m_level != LogLevel::UNKNOWN)
     node["level"] = LogLevel::ToString(m_level);
     if(m_formatter) {
         node["formatter"] = m_formatter->getPattern();
@@ -521,7 +521,9 @@ LoggerManager::LoggerManager() {
 std::string Logger::ToYamlString() {
     YAML::Node node;
     node["name"] = m_name;
-    node["level"] = LogLevel::ToString(m_level);
+    if(m_level != LogLevel::UNKNOWN) {
+        node["level"] = LogLevel::ToString(m_level);
+    }
     if(m_formatter) {
         node["formatter"] = m_formatter->getPattern();
     }
@@ -666,7 +668,9 @@ public:
             
             // NOTE: Currently missing other fields (level, formatter, appenders)
             // Should be expanded similar to the deserialization logic
-            n["level"] = LogLevel::ToString(i.level);
+            if(i.level != LogLevel::UNKNOWN) {
+                n["level"] = LogLevel::ToString(i.level);
+            }
             if(!i.formatter.empty()) {
                 n["formatter"] = i.formatter;
             }
@@ -679,7 +683,9 @@ public:
                 } else if(a.type == 2) {
                     na["type"] = "StdoutLogAppender";
                 }
-                na["level"] = LogLevel::ToString(a.level);
+                if(a.level != LogLevel::UNKNOWN) {
+                    na["level"] = LogLevel::ToString(a.level);
+                }
                 if(!a.formatter.empty()) {
                     na["formatter"] = a.formatter;
                 }
