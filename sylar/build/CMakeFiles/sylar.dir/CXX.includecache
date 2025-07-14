@@ -37,6 +37,8 @@ unordered_set
 -
 list
 -
+functional
+-
 
 /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/log.cpp
 log.h
@@ -47,6 +49,8 @@ functional
 /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/functional
 iostream
 /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/iostream
+config.h
+/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/config.h
 
 /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/log.h
 string

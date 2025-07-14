@@ -390,7 +390,7 @@ public:
     }
 
     void addListener(uint64_t key, on_change_cb cb) {
-        c_cbs[key] = cb;
+        m_cbs[key] = cb;
     }
 
     void delListener(uint64_t key) {
@@ -398,15 +398,15 @@ public:
     }
 
     on_change_cb getListener(uint64_t key) {
-        auto it = m_cb.find(key);
-        return it == m_cb.end() ? mullptr : it->second;
+        auto it = m_cbs.find(key);
+        return it == m_cbs.end() ? nullptr : it->second;
     }
 
     void clearListener() { m_cbs.clear(); }
 private:
     T m_val; ///< The actual stored configuration value
     //变更回调函数组，uint64_key, key to be unique with hash function
-    std::map<uint64_t, on_change_cb> m_cbs
+    std::map<uint64_t, on_change_cb> m_cbs;
 };
 
 /**
@@ -456,7 +456,7 @@ public:
 
         // Instantiate and register new configuration variable
         typename ConfigVar<T>::ptr v(new ConfigVar<T>(name, default_value, description));
-        GetDatas[name] = v;
+        GetDatas()[name] = v;
         return v;
     }
 
