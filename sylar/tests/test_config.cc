@@ -214,9 +214,9 @@ void test_log() {
      std::cout << sylar::LoggerMgr::GetInstance()->toYamlString() << std::endl;
      YAML::Node root = YAML::LoadFile("/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/config/log.yaml");
      sylar::Config::LoadFromYaml(root);
-     std::cout << "=============" << std::endl;
+     std::cout << "===============" << std::endl;
      std::cout << sylar::LoggerMgr::GetInstance()->toYamlString() << std::endl;
-     std::cout << "=============" << std::endl;
+     std::cout << "===============" << std::endl;
      std::cout << root << std::endl;
      SYLAR_LOG_INFO(system_log) << "hello system" << std::endl;
 
