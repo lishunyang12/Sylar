@@ -1,0 +1,55 @@
+@startuml sylar_logger_simplified
+
+hide empty members
+skinparam monochrome true
+left to right direction
+
+class LogFormatter {
+  + format(): string
+  - pattern
+  - format items
+}
+
+abstract class LogAppender {
+  + log(): void {abstract}
+  - formatter
+  - log level
+}
+
+class Logger {
+  + debug()/info()/warn()/error()/fatal()
+  - name
+  - appenders
+  - formatter
+}
+
+' ====== Implementations ======
+class StdoutLogAppender
+class FileLogAppender
+
+' ====== Manager ======
+class LoggerManager {
+  + getLogger()
+  + getRoot()
+  - loggers map
+  - root logger
+}
+
+' ====== Relationships ======
+LogEvent "1" --> "1" Logger : belongs to
+Logger "1" *-- "*" LogAppender : has
+Logger o-- LogFormatter : uses
+
+LogAppender <|-- StdoutLogAppender
+LogAppender <|-- FileLogAppender
+
+LoggerManager "1" *-- "*" Logger : manages
+LoggerManager --> Logger : root
+
+LogFormatter *-- "*" FormatItem : contains
+
+note top of LoggerManager
+  Singleton Pattern
+end note
+
+@enduml
