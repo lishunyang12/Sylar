@@ -451,7 +451,7 @@ public:
 
         // Instantiate and register new configuration variable
         typename ConfigVar<T>::ptr v(new ConfigVar<T>(name, default_value, description));
-        m_datas[name] = v;
+        GetDatas[name] = v;
         return v;
     }
 
@@ -466,8 +466,8 @@ public:
      */
     template<class T> 
     static typename ConfigVar<T>::ptr Lookup(const std::string& name) {
-            auto it = m_datas.find(name);
-            if(it == m_datas.end()) {
+            auto it = GetDatas().find(name);
+            if(it == GetDatas().end()) {
                 return nullptr;
             } 
             
@@ -506,7 +506,10 @@ public:
 
 private:
     /// Static registry storing all configuration variables
-    static ConfigVarMap m_datas;
+    static ConfigVarMap& GetDatas() {
+        static ConfigVarMap m_datas;
+        return m_datas;
+    }
 };
 
 }

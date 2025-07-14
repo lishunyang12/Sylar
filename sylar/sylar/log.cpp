@@ -203,6 +203,24 @@ void Logger::log(LogLevel::level level, LogEvent::ptr event) {
     }
 }
 
+void Logger::setFormatter(LogFormatter::ptr val) {
+    m_formatter = val;
+}
+void Logger::setFormatter(const std::string& val) {
+    sylar::LogFormatter::ptr new_val(new sylar::LogFormatter(val));
+    if(new_val->isError()) {
+        std::cout << "Logger setFormatter name=" << m_name
+                << " value=" << val << " invalid formatter" 
+                << std::endl;
+        return;
+    }
+    m_formatter = new_val;
+}
+
+LogFormatter::ptr Logger::getFormatter() {
+    return m_formatter;
+}
+
 void Logger::debug(LogEvent::ptr event) {
     log(LogLevel::DEBUG, event);
 }
@@ -379,6 +397,7 @@ void LogFormatter::init() {
     case ParserState::FORMAT_START:
         // Handle unclosed format specifier at end
         tokens.emplace_back("<<pattern_error>>", "", 0);
+        m_error = true;
         break;
     case ParserState::LITERAL:
         // Push any remaining literal text
@@ -437,6 +456,7 @@ void LogFormatter::init() {
             auto it = s_format_items.find(std::get<0>(i));
             if (it == s_format_items.end()) {
                 m_items.emplace_back(FormatItem::ptr(new StringFormatItem("<<error_format %" + std::get<0>(i) + ">>")));
+                m_error = true;
             } else {
                 m_items.emplace_back(it->second(std::get<1>(i)));
             }
@@ -495,6 +515,39 @@ struct LogDefine {
    }
 };
 
+// 片特化
+template<>
+class LexicalCast<std::string, std::set<LogDefine>> {
+public:
+    std::set<LogDefine> operator() (const std::string& v) {
+        YAML::Node node = YAML::Load(v);
+        std::set<LogDefine> vec;
+
+        for(size_t i = 0; i < node.size(); ++i) {
+            auto n = node[i];
+            if(n["name"].IsDefined()) {
+                std::cout <<
+            }
+        }
+        return vec;
+    }
+};
+
+template<>
+class LexicalCast<std::set<LogDefine>, std::string> {
+public:
+    std::string operator() (const std::set<LogDefine>& v) {
+        YAML::Node node;
+        for(auto& i : v) {
+            node.push_back(YAML::Load(LexicalCast<T, std::string>()(i)));
+        }
+        std::stringstream ss;
+        ss << node;
+        return ss.str();
+    }
+};
+
+
 sylar::ConfigVar<std::set<LogDefine>> g_log_defines = 
     sylar::Config::Lookup("logs", std::vector<LogDefine>{}, "logs config");
 
@@ -502,16 +555,33 @@ struct LogIniter {
     LogIniter() {
         g_log_defines->addListener(0xF1E231, [](const std::set<LogDefine>& old_value, const std::set<LogDefine>& new_value){
             // 新增
+            SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "On logger ref has been changed";
             for(auto& i : new_value) {
                 auto it = old_value.find(i);
+                sylar::Logger::ptr logger;
                 if(it == old_value.end()) {
                     //新增logger
-                    
+                    logger.reset(new sylar::Logger(i.name));
                 } else {
                     if(!(i == *it)) {
                         //修改logger
-
+                        logger = SYLAR_LOG_NAME(i.name);
                     }
+                }
+                logger->setLevel(i.level);
+                if(!(i.formatter.empty())) {
+                    logger->setFormatter(i.formatter);
+                }
+                logger->clearAppenders();
+                for(auto& a : i.appenders) {
+                    sylar::LogAppender::ptr ap;
+                    if(a.type == 1) {   
+                        ap.reset(new FileLogAppender(a.file));
+                    } else if(a.type == 2) {
+                        ap.reset(new StdoutLogAppender);   
+                    }
+                    ap->setLevel(a.level);            // ?? appender.formatter ??
+                    logger->addAppender(ap);
                 }
             }
 
@@ -626,3 +696,16 @@ void LoggerManager::init() {
 //      │
 //      ├─ Formatted: "2023-01-01T12:00:00 [INFO] thread=1234 file=main.cpp:42 msg='User connected'"
 //      └─ Appended to "app.log" (with rotation)
+
+
+
+
+// Smart Pointers
+// reset()   decrements the counter in the control block, Destroys the object and Deletes the control block if refcount hits 0                   
+// reset(SYLAR_LOG_NAME.get())	Bypasses refcounting	Unsafe (double-free)	Never use this!
+// SYLAR_LOG_NAME()	            Proper refcount++	    Safe	                Normal global logger access
+// reset(new Logger)	        Starts new refcount=1	Safe (but isolated)	    Special-case independent loggers
+
+
+// auto n = node[i];
+// cannot reference to a Lvalue with short lifetime and without name

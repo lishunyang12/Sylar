@@ -248,9 +248,11 @@ public:
      */
     void init();
 
+    bool isError() const { return m_error; }
 private:
     std::string m_pattern;              ///< Original pattern string
     std::vector<FormatItem::ptr> m_items; ///< Parsed format items
+    bool m_error = false;
 };
 
 /**
@@ -354,6 +356,10 @@ public:
 
     const std::string& getName() { return m_name; }
 
+    void setFormatter(LogFormatter::ptr val);
+    void setFormatter(const std::string& val);
+
+    LogFormatter::ptr getFormatter();
 private:
     friend class LoggerManager;
     std::string m_name;                 // Hierarchical name (e.g. "system.network")
