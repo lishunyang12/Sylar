@@ -188,7 +188,6 @@ void test_class() {
             SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << #prefix << ": " \
                 << i.first << " - " << i.second.toString(); \
         } \
-        SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << prefix << ": size=" << m.size(); \
     }
      g_person->addListener(10, [](const Person& old_value, const Person& new_value) {
           SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "old_value=" << old_value.toString()
@@ -214,9 +213,11 @@ void test_log() {
      SYLAR_LOG_INFO(system_log) << "hello system" << std::endl;
      std::cout << sylar::LoggerMgr::GetInstance()->toYamlString() << std::endl;
      YAML::Node root = YAML::LoadFile("/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/config/log.yaml");
-     std::cout << "=============" << std::endl;
      sylar::Config::LoadFromYaml(root);
+     std::cout << "=============" << std::endl;
      std::cout << sylar::LoggerMgr::GetInstance()->toYamlString() << std::endl;
+     std::cout << "=============" << std::endl;
+     std::cout << root << std::endl;
      SYLAR_LOG_INFO(system_log) << "hello system" << std::endl;
 
      system_log->setFormatter("%d - %m%n");
