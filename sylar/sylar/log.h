@@ -282,6 +282,7 @@ public:
      * Can be shared between multiple appenders.
      */
     void setFormatter(LogFormatter::ptr val) { m_formatter = val; }
+    void setFormatter(const std::string& val);
 
     /**
      * @brief Get the current formatter

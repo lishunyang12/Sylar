@@ -18,7 +18,7 @@ logs:
       - type: FileLogAppender
         file: system.txt
         level: info
-        formatter: ""
+        formatter: "%d%T[%p]%T%m%n"
       - type: StdoutLogAppender
         level: info
         formatter: ""

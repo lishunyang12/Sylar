@@ -236,6 +236,15 @@ void Logger::setFormatter(const std::string& val) {
     m_formatter = new_val;
 }
 
+void LogAppender::setFormatter(const std::string& val) {
+    sylar::LogFormatter::ptr new_val(new LogFormatter(val));
+    if(new_val->isError()) {
+        std::cout << "invalid formatter" << std::endl;
+        return;
+    }
+    m_formatter = new_val;
+}
+
 LogFormatter::ptr Logger::getFormatter() {
     return m_formatter;
 }
@@ -736,6 +745,10 @@ struct LogIniter {
                         ap.reset(new StdoutLogAppender);   
                     }
                     ap->setLevel(a.level);            // ?? appender.formatter ??
+                    if(!a.formatter.empty()) {
+                        ap->setFormatter(a.formatter);
+                    }
+                    
                     logger->addAppender(ap);
                 }
             }
