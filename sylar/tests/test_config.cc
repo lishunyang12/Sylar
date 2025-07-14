@@ -1,6 +1,7 @@
 #include "sylar/config.h"
 #include "sylar/log.h"
 #include <yaml-cpp/yaml.h>
+#include <iostream>
 
 #if 0
 sylar::ConfigVar<int>::ptr g_int_value_config =
@@ -208,9 +209,19 @@ void test_class() {
 
 }
 
+void test_log() {
+     std::cout << sylar::LoggerMgr::GetInstance()->toYamlString() << std::endl;
+     YAML::Node root = YAML::LoadFile("/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/config/log.yaml");
+     std::cout << "=============" << std::endl;
+     sylar::Config::LoadFromYaml(root);
+     std::cout << sylar::LoggerMgr::GetInstance()->toYamlString() << std::endl;
+
+}
+
 int main(int argc, char** argv) {
     //test_yaml();
     //test_config();
-    test_class();
+//     test_class();
+    test_log();
     return 0;
 }

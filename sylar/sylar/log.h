@@ -250,6 +250,7 @@ public:
     void init();
 
     bool isError() const { return m_error; }
+    const std::string getPattern() const { return m_pattern; }
 private:
     std::string m_pattern;              ///< Original pattern string
     std::vector<FormatItem::ptr> m_items; ///< Parsed format items
@@ -320,6 +321,8 @@ public:
                     LogLevel::level level, 
                     LogEvent::ptr event) = 0;
 
+    virtual std::string toYamlString() = 0;
+
 protected:
     /// Minimum log level for this appender (default: DEBUG)
     LogLevel::level m_level = LogLevel::DEBUG;
@@ -361,6 +364,8 @@ public:
     void setFormatter(const std::string& val);
 
     LogFormatter::ptr getFormatter();
+
+    std::string ToYamlString();
 private:
     friend class LoggerManager;
     std::string m_name;                 // Hierarchical name (e.g. "system.network")
@@ -394,6 +399,7 @@ public:
     virtual void log(std::shared_ptr<Logger> logger, 
                    LogLevel::level level,
                    LogEvent::ptr event) override;
+    std::string toYamlString() override;
 };
 
 /**
@@ -419,6 +425,7 @@ public:
      * @return false if file couldn't be reopened
      */
     bool reopen();
+    std::string toYamlString() override;
 
 private:
     std::string m_filename;
@@ -462,6 +469,7 @@ public:
      */
     Logger::ptr getRoot() const { return m_root; }
 
+    std::string toYamlString();
 private:
     friend class sylar::Singleton<LoggerManager>;
     
