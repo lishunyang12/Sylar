@@ -79,6 +79,7 @@ public:
 
     /// Convert level enum to string representation
     static const char* ToString(LogLevel::level level);
+    static LogLevel::level FromString(const std::string str);
 };
 
 /**

@@ -18,6 +18,20 @@ const char* LogLevel::ToString(LogLevel::level level) {
     }
 }
 
+LogLevel::level LogLevel::FromString(const std::string str) {
+#define XX(name) \
+    if(str == #name) { \
+        return LogLevel::name; \
+    }
+    XX(DEBUG);
+    XX(INFO);
+    XX(WARN);
+    XX(ERROR);
+    XX(FATAL);
+    return LogLevel::UNKNOWN;
+#undef XX
+}
+
 LogEventWrap::LogEventWrap(LogEvent::ptr m) 
     :m_event(m){
 
@@ -526,8 +540,15 @@ public:
         for(size_t i = 0; i < node.size(); ++i) {
             auto n = node[i];
             if(n["name"].IsDefined()) {
-                std::cout <<
+                std::cout << "Log config error: name is null, " << n
+                          << std::endl; 
+                continue;
             }
+
+            LogDefine ld;
+            ld.name = n["name"].as<std::string>();
+            ld.level = LogLevel::FromString(n["level"].IsDefined() ? n["level"].as<std::string>() : "");
+            
         }
         return vec;
     }
