@@ -548,7 +548,42 @@ public:
             LogDefine ld;
             ld.name = n["name"].as<std::string>();
             ld.level = LogLevel::FromString(n["level"].IsDefined() ? n["level"].as<std::string>() : "");
-            
+            if(n["formatter"].IsDefined()) {
+                ld.formatter = n["formatter"].as<std::string>();
+            }
+
+            if(n["appenders"].IsDefined()) {
+                for(size_t x = 0; x < n["appenders"].size(); ++x) {
+                    auto a = n["appenders"][x];
+                    if(!a["type"].IsDefined()) {
+                        std::cout << "log config error: appender type is null, "
+                                << a << std::endl;
+                        continue;
+                    }
+                    std::string type = a["type"].as<std::string>();
+                    LogAppenderDefine lad;
+                    if(type == "FileLogAppender") {
+                        lad.type = 1;
+                        if(!a["file"].IsDefined()) {
+                            std::cout << "log config error: fileappender file is null"
+                                      << std::endl;
+                            continue;
+                        }
+                        lad.file = a["file"].as<std::string>();
+                        if(n["formatter"].IsDefined()) {
+                            lad.formatter = a["formatter"].as<std::string>();
+                        }
+                    } else if(type == "StdoutLogAppender") {
+                        lad.type = 2;
+                    } else {
+                        std::cout << "log config error: appender type is invalid"
+                                  << std::endl;
+                        continue;
+                    }
+                    
+                    ld.appenders.emplace_back(lad);
+                }
+            }
         }
         return vec;
     }
