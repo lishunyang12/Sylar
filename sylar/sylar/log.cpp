@@ -517,7 +517,7 @@ struct LogDefine {
     std::string formatter;
     std::vector<LogAppenderDefine> appenders;
 
-   bool operator==(const LogDefine& oth) {
+   bool operator==(const LogDefine& oth) const {
         return name == oth.name
             && level == oth.level
             && formatter == oth.formatter
@@ -529,52 +529,68 @@ struct LogDefine {
    }
 };
 
-// 片特化
+// Template specialization for converting std::string to std::set<LogDefine>
+// string -> node -> std::set<LogDefine>
 template<>
 class LexicalCast<std::string, std::set<LogDefine>> {
 public:
     std::set<LogDefine> operator() (const std::string& v) {
+        // Parse the input string into a YAML node structure
         YAML::Node node = YAML::Load(v);
-        std::set<LogDefine> vec;
+        std::set<LogDefine> vec;  
 
+        // Iterate through each element in the YAML sequence
         for(size_t i = 0; i < node.size(); ++i) {
-            auto n = node[i];
-            if(n["name"].IsDefined()) {
+            auto n = node[i];  
+            
+            if(!n["name"].IsDefined()) {
                 std::cout << "Log config error: name is null, " << n
                           << std::endl; 
-                continue;
+                continue;  
             }
 
-            LogDefine ld;
+            LogDefine ld; 
+            
+            // Extract required fields with appropriate conversions
             ld.name = n["name"].as<std::string>();
-            ld.level = LogLevel::FromString(n["level"].IsDefined() ? n["level"].as<std::string>() : "");
+            ld.level = LogLevel::FromString(
+                n["level"].IsDefined() ? n["level"].as<std::string>() : ""
+            );
+            
+            // Optional formatter field
             if(n["formatter"].IsDefined()) {
                 ld.formatter = n["formatter"].as<std::string>();
             }
 
+            // Process appenders if they exist
             if(n["appenders"].IsDefined()) {
                 for(size_t x = 0; x < n["appenders"].size(); ++x) {
-                    auto a = n["appenders"][x];
+                    auto a = n["appenders"][x];  
+                    
                     if(!a["type"].IsDefined()) {
                         std::cout << "log config error: appender type is null, "
                                 << a << std::endl;
                         continue;
                     }
+                    
                     std::string type = a["type"].as<std::string>();
-                    LogAppenderDefine lad;
+                    LogAppenderDefine lad;  
+                    
                     if(type == "FileLogAppender") {
-                        lad.type = 1;
+                        lad.type = 1;  
+                        
                         if(!a["file"].IsDefined()) {
                             std::cout << "log config error: fileappender file is null"
                                       << std::endl;
                             continue;
                         }
                         lad.file = a["file"].as<std::string>();
+                        
                         if(n["formatter"].IsDefined()) {
                             lad.formatter = a["formatter"].as<std::string>();
                         }
                     } else if(type == "StdoutLogAppender") {
-                        lad.type = 2;
+                        lad.type = 2;  
                     } else {
                         std::cout << "log config error: appender type is invalid"
                                   << std::endl;
@@ -584,19 +600,46 @@ public:
                     ld.appenders.emplace_back(lad);
                 }
             }
+            vec.insert(ld);
         }
         return vec;
     }
 };
 
+// Template specialization for converting std::set<LogDefine> to std::string
 template<>
 class LexicalCast<std::set<LogDefine>, std::string> {
 public:
     std::string operator() (const std::set<LogDefine>& v) {
-        YAML::Node node;
+        YAML::Node node;  // Create root YAML node
+        
+        // Convert each LogDefine to a YAML node
         for(auto& i : v) {
-            node.push_back(YAML::Load(LexicalCast<T, std::string>()(i)));
+            YAML::Node n;  
+            n["name"] = i.name;  
+            
+            // NOTE: Currently missing other fields (level, formatter, appenders)
+            // Should be expanded similar to the deserialization logic
+            n["level"] = LogLevel::ToString(i.level);
+            n["formatter"] = i.formatter;
+            
+            for(auto& a : i.appenders) {
+                YAML::Node na;
+                if(a.type == 1) {
+                    na["type"] = "FileLogAppenders";
+                    na["file"] = a.file;
+                } else if(a.type == 2) {
+                    na["type"] = "StdoutLogAppenders";
+                }
+                na["level"] = LogLevel::ToString(a.level);
+                na["formatter"] = a.formatter;
+
+                n["appenders"].push_back(na);            
+            }
+            node.push_back(n); 
         }
+
+        // Convert the YAML node tree to a string
         std::stringstream ss;
         ss << node;
         return ss.str();
@@ -604,8 +647,8 @@ public:
 };
 
 
-sylar::ConfigVar<std::set<LogDefine>> g_log_defines = 
-    sylar::Config::Lookup("logs", std::vector<LogDefine>{}, "logs config");
+sylar::ConfigVar<std::set<LogDefine>>::ptr g_log_defines = 
+    sylar::Config::Lookup("logs", std::set<LogDefine>{}, "logs config");
 
 struct LogIniter {
     LogIniter() {
@@ -650,7 +693,7 @@ struct LogIniter {
                     logger->clearAppenders();
                 }
             } 
-        })
+        });
     }
 };
 

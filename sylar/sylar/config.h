@@ -14,6 +14,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <list>
+#include <functional>
 
 namespace sylar {
 
@@ -320,6 +321,7 @@ template<class T,
 class ConfigVar : public ConfigVarBase {
 public:
     typedef std::shared_ptr<ConfigVar> ptr;
+    typedef std::function<void(const T& old_value, const T& new_value)> on_change_cb;
 
     /**
      * @brief Construct a new ConfigVar object
@@ -370,38 +372,41 @@ public:
         }
         return false;
     }
-/**
- * @brief Unordered_map serialization/deserialization
- * @tparam T Value type
- * 
- * Hash-based variant of map. Format same as ordered map.
- */
-    /**
-     * @brief Get the current stored value
-     */
+
     const T getValue() const { return m_val; }
 
-    /**
-     * @brief Update the stored value
-     * @param v New value to store
-     */
-    void setValue(const/**
- * @brief Unordered_map serialization/deserialization
- * @tparam T Value type
- * 
- * Hash-based variant of map. Format same as ordered map.
- */ T& v) { m_val = v; }
+    // Critical: Requires T to have operator==
+    void setValue(const T& v) { 
+        if(v == m_val) {
+            return;
+        }
+        for(auto& i : m_cbs) {
+            i.second(m_val, v);
+        }
+     }
 
-    /**
-     * @brief Get the type name of the stored value
-     * @return std::string Type name as reported by typeid
-     */
     std::string getTypeName() const override { 
         return typeid(T).name(); 
     }
 
+    void addListener(uint64_t key, on_change_cb cb) {
+        c_cbs[key] = cb;
+    }
+
+    void delListener(uint64_t key) {
+        m_cbs.erase(key);
+    }
+
+    on_change_cb getListener(uint64_t key) {
+        auto it = m_cb.find(key);
+        return it == m_cb.end() ? mullptr : it->second;
+    }
+
+    void clearListener() { m_cbs.clear(); }
 private:
     T m_val; ///< The actual stored configuration value
+    //变更回调函数组，uint64_key, key to be unique with hash function
+    std::map<uint64_t, on_change_cb> m_cbs
 };
 
 /**
