@@ -13,6 +13,12 @@ CMakeFiles/sylar.dir/sylar/log.cpp.o: ../sylar/log.h
 CMakeFiles/sylar.dir/sylar/log.cpp.o: ../sylar/singleton.h
 CMakeFiles/sylar.dir/sylar/log.cpp.o: ../sylar/util.h
 
+CMakeFiles/sylar.dir/sylar/thread.cc.o: ../sylar/log.h
+CMakeFiles/sylar.dir/sylar/thread.cc.o: ../sylar/singleton.h
+CMakeFiles/sylar.dir/sylar/thread.cc.o: ../sylar/thread.cc
+CMakeFiles/sylar.dir/sylar/thread.cc.o: ../sylar/thread.h
+CMakeFiles/sylar.dir/sylar/thread.cc.o: ../sylar/util.h
+
 CMakeFiles/sylar.dir/sylar/util.cpp.o: ../sylar/util.cpp
 CMakeFiles/sylar.dir/sylar/util.cpp.o: ../sylar/util.h
 

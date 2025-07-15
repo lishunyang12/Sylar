@@ -82,6 +82,24 @@ singleton.h
 
 /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/singleton.h
 
+/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/thread.cc
+thread.h
+/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/thread.h
+log.h
+/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/log.h
+util.h
+/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/util.h
+
+/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/thread.h
+thread
+-
+functional
+-
+memory
+-
+pthread.h
+-
+
 /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/util.cpp
 util.h
 /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/util.h

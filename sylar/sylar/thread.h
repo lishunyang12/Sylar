@@ -4,10 +4,9 @@
 #include <thread>
 #include <functional>
 #include <memory>
-#include <sys/types.h>
 #include <pthread.h>
 
-// pthread_xxx   pre C++
+// pthread_xxx   C
 // std::thread, pthread 
 namespace sylar {
 
@@ -16,9 +15,8 @@ public:
     typedef std::shared_ptr<Thread> ptr;
     Thread(std::function<void()> cb, const std::string& name); 
     ~Thread();
-    typedef pid_t tid_t;  // or pthread_t if you prefer
 
-    tid_t getId() const { return m_id; }
+    pid_t getId() const { return m_id; }
     const std::string& getName() const { return m_name; }
 
     void join();
@@ -29,8 +27,10 @@ private:
     Thread(const Thread&) = delete;
     Thread(const Thread&&) = delete;
     Thread& operator=(const Thread&) = delete;
+
+    static void* run(void* arg);
 private:
-    tid_t m_id = -1;           // Thread ID
+    pid_t m_id = -1;           // Thread ID
     pthread_t m_thread = 0;   // POSIX thread handle
     std::function<void()> m_cb;
     std::string m_name;

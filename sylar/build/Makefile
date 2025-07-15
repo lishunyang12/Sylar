@@ -203,6 +203,33 @@ sylar/log.cpp.s:
 	$(MAKE) -f CMakeFiles/sylar.dir/build.make CMakeFiles/sylar.dir/sylar/log.cpp.s
 .PHONY : sylar/log.cpp.s
 
+sylar/thread.o: sylar/thread.cc.o
+
+.PHONY : sylar/thread.o
+
+# target to build an object file
+sylar/thread.cc.o:
+	$(MAKE) -f CMakeFiles/sylar.dir/build.make CMakeFiles/sylar.dir/sylar/thread.cc.o
+.PHONY : sylar/thread.cc.o
+
+sylar/thread.i: sylar/thread.cc.i
+
+.PHONY : sylar/thread.i
+
+# target to preprocess a source file
+sylar/thread.cc.i:
+	$(MAKE) -f CMakeFiles/sylar.dir/build.make CMakeFiles/sylar.dir/sylar/thread.cc.i
+.PHONY : sylar/thread.cc.i
+
+sylar/thread.s: sylar/thread.cc.s
+
+.PHONY : sylar/thread.s
+
+# target to generate assembly for a file
+sylar/thread.cc.s:
+	$(MAKE) -f CMakeFiles/sylar.dir/build.make CMakeFiles/sylar.dir/sylar/thread.cc.s
+.PHONY : sylar/thread.cc.s
+
 sylar/util.o: sylar/util.cpp.o
 
 .PHONY : sylar/util.o
@@ -301,6 +328,9 @@ help:
 	@echo "... sylar/log.o"
 	@echo "... sylar/log.i"
 	@echo "... sylar/log.s"
+	@echo "... sylar/thread.o"
+	@echo "... sylar/thread.i"
+	@echo "... sylar/thread.s"
 	@echo "... sylar/util.o"
 	@echo "... sylar/util.i"
 	@echo "... sylar/util.s"
