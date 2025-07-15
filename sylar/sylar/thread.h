@@ -5,10 +5,86 @@
 #include <functional>
 #include <memory>
 #include <pthread.h>
+#include <semaphore.h>
+#include <stdint.h>
 
 // pthread_xxx   C
 // std::thread, pthread 
 namespace sylar {
+
+class Semaphore {
+public:
+    Semaphore(uint32_t count = 0);
+    ~Semaphore();
+
+    void wait();
+    void notify();
+private:
+    Semaphore(const Semaphore&) = delete;
+    Semaphore(const Semaphore&&) = delete;
+    Semaphore& operator=(const Semaphore&) = delete;
+
+private:
+    sem_t m_semaphore;
+};
+
+template<class T> 
+struct ScopedLockImpl {
+public:
+    ScopedLockImpl(T& mutex);
+        :m_mutex(mutex)
+        m_mutex.lock()
+        m_locked = true;
+
+    ~ScopedLockImpl() {
+        unlock();
+    }
+
+    void lock() {
+        if(!m_locked) {
+            m_mutex.lock();
+            m_locked = true;
+        }
+    }
+
+    void unlock() {
+        if(m_locked) {
+            m_mutex.unlock();
+            m_locked = false;
+        }
+    }
+private:
+    T& m_mutex;
+    bool m_locked;
+};
+
+class Mutex {
+public:
+
+private:
+    pthread_mutex_lock
+};
+
+class RWMutex {
+public:
+    RWMutex() {
+        pthread_rwlock_init(&m_lock, nullptr);
+    }
+
+    ~RWMutex() {
+        pthread_rwlock_destroy(&m_lock);
+    }
+
+    void rdlock() {
+
+    }
+
+    void wrlock() {
+        
+    }
+private:
+    pthread_rwlock_t m_lock;
+};
 
 class Thread {
 public:
@@ -51,6 +127,8 @@ private:
     pthread_t m_thread = 0;    // POSIX thread handle
     std::function<void()> m_cb; // Thread callback function
     std::string m_name;        // Thread name
+
+    Semaphore m_semaphore;
 };
 
 }

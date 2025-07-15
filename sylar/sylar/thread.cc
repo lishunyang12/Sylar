@@ -13,6 +13,28 @@ static thread_local std::string t_thread_name = "UNKNOWN";
 // Logger instance for thread-related messages
 static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
 
+Semaphore::Semaphore(uint32_t count) {
+    if(sem_init(&m_semaphore, 0, count)) {
+        throw std::logic_error("sem_init error");
+    }
+}
+
+Semaphore::~Semaphore() {
+    sem_destroy(&m_semaphore);
+}
+
+void Semaphore::wait() {
+    if(sem_wait(&m_semaphore)) {
+        throw std::logic_error("sem_post error");
+    }
+}
+
+void Semaphore::notify() {
+    if(sem_post(&m_semaphore)) {
+        throw std::logic_error("sem_post error");
+    }
+}
+
 // Get current thread object
 Thread* Thread::GetThis() {
     return t_thread;
@@ -44,6 +66,7 @@ Thread::Thread(std::function<void()> cb, const std::string& name)
             << " name=" << name;
         throw std::logic_error("pthread_create error");
     }
+    m_semaphore.wait();
 }
 
 // Thread destructor
@@ -83,6 +106,7 @@ void* Thread::run(void *arg) {
     std::function<void()> cb;
     cb.swap(thread->m_cb);
 
+    thread->m_semaphore.notify();
     // Execute the callback
     cb();
     

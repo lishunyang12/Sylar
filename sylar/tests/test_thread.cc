@@ -1,4 +1,5 @@
 #include "sylar/sylar.h"
+#include <unistd.h>
 
 sylar::Logger::ptr g_logger = SYLAR_LOG_ROOT();
 
@@ -7,6 +8,7 @@ void func1() {
                              << " this.name: " << sylar::Thread::GetThis()->getName()
                              << " id: " << sylar::GetThreadId()
                              << " this.id " << sylar::Thread::GetThis()->getId(); 
+    sleep(60);
 }
 
 void func2() {
