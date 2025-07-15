@@ -5,10 +5,10 @@
 namespace sylar {
 
 // Thread-local storage for current thread pointer
-thread_local Thread* t_thread = nullptr;
+static thread_local Thread* t_thread = nullptr;
 
 // Thread-local storage for current thread name
-thread_local std::string t_thread_name = "UNKNOWN";
+static thread_local std::string t_thread_name = "UNKNOWN";
 
 // Logger instance for thread-related messages
 static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
@@ -78,6 +78,7 @@ void* Thread::run(void *arg) {
     // Set thread name (limited to 15 characters)
     pthread_setname_np(pthread_self(), thread->m_name.substr(0, 15).c_str());
 
+    t_thread_name = thread->m_name;
     // Swap the callback to local variable to ensure it's called only once
     std::function<void()> cb;
     cb.swap(thread->m_cb);
