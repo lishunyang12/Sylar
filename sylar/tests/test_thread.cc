@@ -2,7 +2,7 @@
 #include <unistd.h>
 
 sylar::Logger::ptr g_logger = SYLAR_LOG_ROOT();
-sylar::RWMutex s_mutex;
+sylar::Mutex s_mutex;
 
 volatile int count = 0;
 void func1() {
@@ -11,7 +11,7 @@ void func1() {
                              << " id: " << sylar::GetThreadId()
                              << " this.id " << sylar::Thread::GetThis()->getId(); 
     for(int i = 0; i < 1000000; ++i) {
-        sylar::RWMutex::WriteLock lock(s_mutex);
+        sylar::Mutex::Lock lock(s_mutex);
         ++count;
     }
 }

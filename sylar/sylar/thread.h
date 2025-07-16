@@ -121,6 +121,28 @@ private:
     bool m_locked;
 };
 
+class Mutex {
+public:
+    typedef ScopedLockImpl<Mutex> Lock;
+    Mutex() {
+        pthread_mutex_init(&m_mutex, nullptr);
+    }
+
+    ~Mutex() {
+        pthread_mutex_destroy(&m_mutex);
+    }
+
+    void lock() {
+        pthread_mutex_lock(&m_mutex);
+    }
+
+    void unlock() {
+        pthread_mutex_unlock(&m_mutex);
+    }
+private:
+    pthread_mutex_t m_mutex;
+};
+
 class RWMutex {
 public:
     typedef ReadScopedLockImpl<RWMutex> ReadLock;

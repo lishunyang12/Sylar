@@ -13,6 +13,7 @@
 #include <map>
 #include "util.h"
 #include "singleton.h"
+#include "thread.h"
 
 /**
  * @def SYLAR_LOG_LEVEL(logger, level)
@@ -288,7 +289,7 @@ public:
      * @brief Get the current formatter
      * @return Current log formatter
      */
-    LogFormatter::ptr getFormatter() const { return m_formatter; }
+    LogFormatter::ptr getFormatter();
 
     /**
      * @brief Get the minimum log level for this appender
@@ -329,7 +330,7 @@ protected:
     /// Minimum log level for this appender (default: DEBUG)
     LogLevel::level m_level = LogLevel::DEBUG;
     bool m_hasFormatter = false;
-
+    Mutex m_mutex;
     /// Formatter used to convert log events to strings
     LogFormatter::ptr m_formatter;
 };
@@ -373,6 +374,7 @@ private:
     friend class LoggerManager;
     std::string m_name;                 // Hierarchical name (e.g. "system.network")
     LogLevel::level m_level = LogLevel::DEBUG;
+    sylar::Mutex m_mutex;
     std::list<LogAppender::ptr> m_appenders;
     LogFormatter::ptr m_formatter;      // Default format for appenders without their own
     Logger::ptr m_root;                 // Fallback logger when no appenders are configured
@@ -475,7 +477,8 @@ public:
     std::string toYamlString();
 private:
     friend class sylar::Singleton<LoggerManager>;
-    
+
+    Mutex m_mutex;
     LoggerManager();  ///< Private constructor for singleton
     ~LoggerManager() = default;
     
