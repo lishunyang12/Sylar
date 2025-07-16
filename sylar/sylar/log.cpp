@@ -770,7 +770,7 @@ sylar::ConfigVar<std::set<LogDefine>>::ptr g_log_defines =
 
 struct LogIniter {
     LogIniter() {
-        g_log_defines->addListener(0xF1E231, [](const std::set<LogDefine>& old_value, const std::set<LogDefine>& new_value){
+        g_log_defines->addListener([](const std::set<LogDefine>& old_value, const std::set<LogDefine>& new_value){
             // 新增
             SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "On logger ref has been changed";
             for(auto& i : new_value) {

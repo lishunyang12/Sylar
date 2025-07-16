@@ -39,6 +39,10 @@ list
 -
 functional
 -
+thread.h
+/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/thread.h
+log.h
+/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/log.h
 
 /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/log.cpp
 log.h

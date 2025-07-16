@@ -189,7 +189,7 @@ void test_class() {
                 << i.first << " - " << i.second.toString(); \
         } \
     }
-     g_person->addListener(10, [](const Person& old_value, const Person& new_value) {
+     g_person->addListener([](const Person& old_value, const Person& new_value) {
           SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "old_value=" << old_value.toString()
                << " new_value=" << new_value.toString();
      });

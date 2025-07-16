@@ -347,6 +347,7 @@ public:
      */
     std::string toString() override {
         try {
+            RWMutexType::ReadLock lock(m_mutex);
             return ToStr()(m_val);
         } catch(std::exception& e) {
             SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) 
@@ -377,16 +378,22 @@ public:
         return false;
     }
 
-    const T getValue() const { return m_val; }
+    const T getValue() { 
+        RWMutexType::ReadLock lock(m_mutex);
+        return m_val; 
+    }
 
     // Critical: Requires T to have operator==
     void setValue(const T& v) { 
+        RWMutexType::ReadLock rlock(m_mutex);
         if(v == m_val) {
             return;
         }
         for(auto& i : m_cbs) {
             i.second(m_val, v);
         }
+        RWMutexType::WriteLock wlock(m_mutex);
+        m_val = v;
      }
 
     std::string getTypeName() const override { 
@@ -412,7 +419,11 @@ public:
         return it == m_cbs.end() ? nullptr : it->second;
     }
 
-    void clearListener() { m_cbs.clear(); }
+    void clearListener() { 
+        RWMutexType::WriteLock lock(m_mutex);
+        m_cbs.clear(); 
+    }
+
 private:
     RWMutexType m_mutex;
     T m_val; ///< The actual stored configuration value
@@ -431,6 +442,7 @@ class Config {
 public:
     /// Type alias for the configuration variable registry
     typedef std::map<std::string, ConfigVarBase::ptr> ConfigVarMap;
+    typedef RWMutex RWMutexType;
 
     /**
      * @brief Lookup or create a typed configuration variable
@@ -451,6 +463,7 @@ public:
     template<class T>
     static typename ConfigVar<T>::ptr Lookup(const std::string& name,
             const T& default_value, const std::string& description = "") {   
+        RWMutexType::WriteLock lock(GetMutex());
         // Check for existing configuration
         auto tmp = Lookup<T>(name);
         if(tmp) {
@@ -482,6 +495,7 @@ public:
      */
     template<class T> 
     static typename ConfigVar<T>::ptr Lookup(const std::string& name) {
+            RWMutexType::ReadLock lock(GetMutex());
             auto it = GetDatas().find(name);
             if(it == GetDatas().end()) {
                 return nullptr;
@@ -520,11 +534,18 @@ public:
      */
     static ConfigVarBase::ptr LookupBase(const std::string& name);
 
+    static void Visit(std::function<void(ConfigVarBase::ptr)> cb);
+
 private:
     /// Static registry storing all configuration variables
     static ConfigVarMap& GetDatas() {
         static ConfigVarMap m_datas;
         return m_datas;
+    }
+
+    static RWMutexType& GetMutex() {
+        static RWMutexType s_mutex;
+        return s_mutex;
     }
 };
 
