@@ -345,13 +345,14 @@ void FileLogAppender::log(std::shared_ptr<Logger> logger, LogLevel::level level,
             reopen();
             m_lastTime = now;
         }
-        
+
         MutexType::Lock lock(m_mutex);
         if(!(m_filestream << m_formatter->format(logger, level, event))) {
             std::cout << "error" << std::endl;
         }
     }
 }
+
 
 FileLogAppender::FileLogAppender(const std::string& filename) 
     : m_filename(filename) {
