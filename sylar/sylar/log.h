@@ -271,7 +271,7 @@ class LogAppender {
 public:
     /// Shared pointer type for safe memory management
     typedef std::shared_ptr<LogAppender> ptr;
-    typedef Mutex MutexType;
+    typedef Spinlock MutexType;
 
     /// Virtual destructor for polymorphic deletion
     virtual ~LogAppender() = default;
@@ -343,7 +343,7 @@ protected:
 class Logger : public std::enable_shared_from_this<Logger> {
 public:
     typedef std::shared_ptr<Logger> ptr;
-    typedef Mutex MutexType;
+    typedef Spinlock MutexType;
 
     explicit Logger(const std::string& name = "root");
     
@@ -437,6 +437,7 @@ public:
 private:
     std::string m_filename;
     std::ofstream m_filestream;
+    uint64_t m_lastTime = 0;
 };
 
 /**
@@ -450,7 +451,7 @@ private:
  */
 class LoggerManager {
 public:
-    typedef Mutex Mutextype;
+    typedef Spinlock Mutextype;
     /**
      * @brief Get or create named logger
      * @param name Logger name (dot-separated hierarchy)

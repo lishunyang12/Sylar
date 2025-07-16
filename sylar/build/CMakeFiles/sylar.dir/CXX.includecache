@@ -105,6 +105,8 @@ semaphore.h
 -
 stdint.h
 -
+atomic
+-
 
 /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/util.cpp
 util.h
