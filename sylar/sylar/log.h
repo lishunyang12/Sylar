@@ -271,6 +271,7 @@ class LogAppender {
 public:
     /// Shared pointer type for safe memory management
     typedef std::shared_ptr<LogAppender> ptr;
+    typedef Mutex MutexType;
 
     /// Virtual destructor for polymorphic deletion
     virtual ~LogAppender() = default;
@@ -330,7 +331,7 @@ protected:
     /// Minimum log level for this appender (default: DEBUG)
     LogLevel::level m_level = LogLevel::DEBUG;
     bool m_hasFormatter = false;
-    Mutex m_mutex;
+    MutexType m_mutex;
     /// Formatter used to convert log events to strings
     LogFormatter::ptr m_formatter;
 };
@@ -342,6 +343,7 @@ protected:
 class Logger : public std::enable_shared_from_this<Logger> {
 public:
     typedef std::shared_ptr<Logger> ptr;
+    typedef Mutex MutexType;
 
     explicit Logger(const std::string& name = "root");
     
@@ -374,7 +376,7 @@ private:
     friend class LoggerManager;
     std::string m_name;                 // Hierarchical name (e.g. "system.network")
     LogLevel::level m_level = LogLevel::DEBUG;
-    sylar::Mutex m_mutex;
+    MutexType m_mutex;
     std::list<LogAppender::ptr> m_appenders;
     LogFormatter::ptr m_formatter;      // Default format for appenders without their own
     Logger::ptr m_root;                 // Fallback logger when no appenders are configured
@@ -448,11 +450,12 @@ private:
  */
 class LoggerManager {
 public:
+    typedef Mutex Mutextype;
     /**
      * @brief Get or create named logger
      * @param name Logger name (dot-separated hierarchy)
      * @return Shared pointer to logger instance
-     *
+     * 
      * Creates parent loggers automatically if needed.
      * Example: getLogger("system.network.tcp") creates 3 loggers.
      */
@@ -478,7 +481,7 @@ public:
 private:
     friend class sylar::Singleton<LoggerManager>;
 
-    Mutex m_mutex;
+    Mutextype m_mutex;
     LoggerManager();  ///< Private constructor for singleton
     ~LoggerManager() = default;
     

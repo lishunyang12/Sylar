@@ -195,9 +195,9 @@ Logger::Logger(const std::string& name)
 //%d{%Y-%m-%d %H:%M:%S}%T%t%T%F%T%[p]%T%[%c]%T%f:%l%T%m%n
 
 void Logger::addAppender(LogAppender::ptr appender) {
-    sylar::Mutex lock(m_mutex);
+    MutexType::Lock lock(m_mutex);
     if(!appender->getFormatter()){
-            Mutex::Lock ll(appender->m_mutex);
+            MutexType::Lock ll(appender->m_mutex);
             appender->m_formatter = m_formatter; 
             // don't change hasFormatter status
             // hasFormatter is still false
@@ -217,7 +217,7 @@ void Logger::delAppender(LogAppender::ptr appender) {
 void Logger::log(LogLevel::level level, LogEvent::ptr event) {
     if(level >= m_level) {
         auto self = shared_from_this();
-        Mutex::Lock lock(m_mutex);
+        MutexType::Lock lock(m_mutex);
         if(!m_appenders.empty()) {
             for(auto& i : m_appenders) {
                 i->log(self, level, event);
@@ -229,12 +229,12 @@ void Logger::log(LogLevel::level level, LogEvent::ptr event) {
 }
 
 void Logger::setFormatter(LogFormatter::ptr val) {
-    Mutex::Lock lock(m_mutex);
+    MutexType::Lock lock(m_mutex);
     m_formatter = val;
 
     // appenders' formatter will also be affected if inherited from logger
     for(auto& i : m_appenders) {
-        Mutex::Lock ll(i->m_mutex);
+        MutexType::Lock ll(i->m_mutex);
         if(!i->m_hasFormatter) {
             i->m_formatter = m_formatter;
         }
@@ -267,7 +267,7 @@ void LogAppender::setFormatter(const std::string& val) {
 }
 
 void LogAppender::setFormatter(LogFormatter::ptr val) { 
-    Mutex::Lock lock(m_mutex);
+    MutexType::Lock lock(m_mutex);
     m_formatter = val; 
     if(m_formatter) {
         m_hasFormatter = true;
@@ -277,13 +277,13 @@ void LogAppender::setFormatter(LogFormatter::ptr val) {
 }
 
 LogFormatter::ptr LogAppender::getFormatter() {
-    Mutex::Lock lock(m_mutex);
+    MutexType::Lock lock(m_mutex);
     return m_formatter;
 }
 
 
 LogFormatter::ptr Logger::getFormatter() {
-    sylar::Mutex lock(m_mutex);
+    MutexType lock(m_mutex);
     return m_formatter;
 }
 
@@ -318,14 +318,14 @@ std::string FileLogAppender::toYamlString() {
 
 void StdoutLogAppender::log(std::shared_ptr<Logger> logger, LogLevel::level level, LogEvent::ptr event) {
     if (level >= m_level) {
-        Mutex::Lock lock(m_mutex);
+        MutexType::Lock lock(m_mutex);
         std::string str = m_formatter->format(logger, level, event);
         std::cout << str << std::endl;
     }
 }
 
 std::string StdoutLogAppender::toYamlString() {
-    Mutex::Lock lock(m_mutex);
+    MutexType::Lock lock(m_mutex);
     YAML::Node node;
     node["type"] = "StdoutLogAppender";
     if(m_level != LogLevel::UNKNOWN)
@@ -340,7 +340,7 @@ std::string StdoutLogAppender::toYamlString() {
 
 void FileLogAppender::log(std::shared_ptr<Logger> logger, LogLevel::level level, LogEvent::ptr event) {
     if (level >= m_level) {
-        Mutex::Lock lock(m_mutex);
+        MutexType::Lock lock(m_mutex);
         m_filestream << m_formatter->format(logger, level, event);
     }
 }
@@ -354,7 +354,7 @@ FileLogAppender::FileLogAppender(const std::string& filename)
 
 // This pattern is useful for log rotation or when you need to reopen a log file after it might have been moved/deleted
 bool FileLogAppender::reopen() {
-    Mutex::Lock lock(m_mutex);
+    MutexType::Lock lock(m_mutex);
     if (m_filestream) {
         m_filestream.close();
     }
@@ -570,7 +570,7 @@ LoggerManager::LoggerManager() {
 }
 
 std::string Logger::ToYamlString() {
-    sylar::Mutex lock(m_mutex);
+    MutexType lock(m_mutex);
     YAML::Node node;
     node["name"] = m_name;
     if(m_level != LogLevel::UNKNOWN) {
@@ -590,7 +590,7 @@ std::string Logger::ToYamlString() {
 }
 
 Logger::ptr LoggerManager::getLogger(const std::string& name) {
-    Mutex::Lock lock(m_mutex);
+    Mutextype lock(m_mutex);
     auto it = m_loggers.find(name);
     if(it != m_loggers.end()) return it->second;
 
@@ -813,7 +813,7 @@ struct LogIniter {
 static LogIniter __log_init;
 
 std::string LoggerManager::toYamlString() {
-    Mutex::Lock lock(m_mutex);
+    Mutextype::Lock lock(m_mutex);
     YAML::Node node;
     for(auto& i : m_loggers) {
         node.push_back(YAML::Load(i.second->ToYamlString()));

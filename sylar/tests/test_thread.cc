@@ -17,18 +17,31 @@ void func1() {
 }
 
 void func2() {
+    while(true) {
+        SYLAR_LOG_INFO(g_logger) << "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+    }
+}
 
+void func3() {
+    while(true) {
+        SYLAR_LOG_INFO(g_logger) << "=========================================";
+    }
 }
 
 int main(int argc, char** argv) {
     SYLAR_LOG_INFO(g_logger) << "Thread test begin";
+    YAML::Node root = YAML::LoadFile("/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/config/log2.yaml");
+    sylar::Config::LoadFromYaml(root);
+
     std::vector<sylar::Thread::ptr> thrs;
-    for(int i = 0; i < 5; ++i) {
-        sylar::Thread::ptr thr(new sylar::Thread(&func1, "name_" + std::to_string(i)));
+    for(int i = 0; i < 2; ++i) {
+        sylar::Thread::ptr thr(new sylar::Thread(&func1, "name_" + std::to_string(i*2)));
+        sylar::Thread::ptr thr2(new sylar::Thread(&func2, "name_" + std::to_string(i*2+1)));        
         thrs.push_back(thr);
+        thrs.push_back(thr2);
     }
 
-    for(int i = 0; i < 5; ++i) {
+    for(size_t i = 0; i < thrs.size(); ++i) {
         thrs[i]->join();
     }
     SYLAR_LOG_INFO(g_logger) << "Thread test end";
