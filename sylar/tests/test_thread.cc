@@ -2,13 +2,19 @@
 #include <unistd.h>
 
 sylar::Logger::ptr g_logger = SYLAR_LOG_ROOT();
+sylar::RWMutex s_mutex;
+
+volatile int count = 0;
 
 void func1() {
     SYLAR_LOG_INFO(g_logger) << "name: " << sylar::Thread::GetName()
                              << " this.name: " << sylar::Thread::GetThis()->getName()
                              << " id: " << sylar::GetThreadId()
                              << " this.id " << sylar::Thread::GetThis()->getId(); 
-    sleep(60);
+    for(int i = 0; i < 1000000; ++i) {
+        sylar::RWMutex::WriteLock lock(s_mutex);
+        ++count;
+    }
 }
 
 void func2() {
@@ -27,5 +33,6 @@ int main(int argc, char** argv) {
         thrs[i]->join();
     }
     SYLAR_LOG_INFO(g_logger) << "Thread test end";
+    SYLAR_LOG_INFO(g_logger) << "count=" << count;
     return 0;
 }
