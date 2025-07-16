@@ -34,11 +34,11 @@ int main(int argc, char** argv) {
     sylar::Config::LoadFromYaml(root);
 
     std::vector<sylar::Thread::ptr> thrs;
-    for(int i = 0; i < 2; ++i) {
+    for(int i = 0; i < 1; ++i) {
         sylar::Thread::ptr thr(new sylar::Thread(&func2, "name_" + std::to_string(i*2)));
-        sylar::Thread::ptr thr2(new sylar::Thread(&func3, "name_" + std::to_string(i*2+1)));        
+        //sylar::Thread::ptr thr2(new sylar::Thread(&func3, "name_" + std::to_string(i*2+1)));        
         thrs.push_back(thr);
-        thrs.push_back(thr2);
+        //thrs.push_back(thr2);
     }
 
     for(size_t i = 0; i < thrs.size(); ++i) {

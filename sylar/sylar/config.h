@@ -16,6 +16,9 @@
 #include <list>
 #include <functional>
 
+#include "thread.h"
+#include "log.h"
+
 namespace sylar {
 
 /**
@@ -320,6 +323,7 @@ template<class T,
          class ToStr = LexicalCast<T, std::string>>
 class ConfigVar : public ConfigVarBase {
 public:
+    typedef RWMutex RWMutexType;
     typedef std::shared_ptr<ConfigVar> ptr;
     typedef std::function<void(const T& old_value, const T& new_value)> on_change_cb;
 
@@ -389,21 +393,28 @@ public:
         return typeid(T).name(); 
     }
 
-    void addListener(uint64_t key, on_change_cb cb) {
-        m_cbs[key] = cb;
+    uint64_t addListener(on_change_cb cb) {
+        static uint64_t s_func_id = 0;
+        RWMutexType::WriteLock lock(m_mutex);
+        ++s_func_id;
+        m_cbs[s_func_id] = cb;
+        return s_func_id;
     }
 
     void delListener(uint64_t key) {
+        RWMutexType::WriteLock lock(m_mutex);
         m_cbs.erase(key);
     }
 
     on_change_cb getListener(uint64_t key) {
+        RWMutexType::ReadLock lock(m_mutex);
         auto it = m_cbs.find(key);
         return it == m_cbs.end() ? nullptr : it->second;
     }
 
     void clearListener() { m_cbs.clear(); }
 private:
+    RWMutexType m_mutex;
     T m_val; ///< The actual stored configuration value
     //变更回调函数组，uint64_key, key to be unique with hash function
     std::map<uint64_t, on_change_cb> m_cbs;
