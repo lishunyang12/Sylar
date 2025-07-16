@@ -5,7 +5,6 @@ sylar::Logger::ptr g_logger = SYLAR_LOG_ROOT();
 sylar::RWMutex s_mutex;
 
 volatile int count = 0;
-
 void func1() {
     SYLAR_LOG_INFO(g_logger) << "name: " << sylar::Thread::GetName()
                              << " this.name: " << sylar::Thread::GetThis()->getName()
