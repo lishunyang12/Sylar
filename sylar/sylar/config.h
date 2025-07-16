@@ -7,7 +7,6 @@
 #include <algorithm>
 #include <boost/lexical_cast.hpp>
 #include <yaml-cpp/yaml.h>
-#include "log.h"
 #include <vector>
 #include <map>
 #include <set>
@@ -385,14 +384,16 @@ public:
 
     // Critical: Requires T to have operator==
     void setValue(const T& v) { 
-        RWMutexType::ReadLock rlock(m_mutex);
-        if(v == m_val) {
-            return;
+        {
+            RWMutexType::ReadLock lock(m_mutex);
+            if(v == m_val) {
+                return;
+            }
+            for(auto& i : m_cbs) {
+                i.second(m_val, v);
+            }
         }
-        for(auto& i : m_cbs) {
-            i.second(m_val, v);
-        }
-        RWMutexType::WriteLock wlock(m_mutex);
+        RWMutexType::WriteLock lock(m_mutex);
         m_val = v;
      }
 
@@ -427,7 +428,7 @@ public:
 private:
     RWMutexType m_mutex;
     T m_val; ///< The actual stored configuration value
-    //变更回调函数组，uint64_key, key to be unique with hash function
+    //uint64_key, key to be unique with hash function
     std::map<uint64_t, on_change_cb> m_cbs;
 };
 
@@ -463,7 +464,6 @@ public:
     template<class T>
     static typename ConfigVar<T>::ptr Lookup(const std::string& name,
             const T& default_value, const std::string& description = "") {   
-        RWMutexType::WriteLock lock(GetMutex());
         // Check for existing configuration
         auto tmp = Lookup<T>(name);
         if(tmp) {
@@ -480,6 +480,7 @@ public:
 
         // Instantiate and register new configuration variable
         typename ConfigVar<T>::ptr v(new ConfigVar<T>(name, default_value, description));
+        RWMutexType::WriteLock lock(GetMutex());
         GetDatas()[name] = v;
         return v;
     }

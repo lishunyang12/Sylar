@@ -70,7 +70,7 @@ void Config::Visit(std::function<void(ConfigVarBase::ptr)> cb) {
     RWMutexType::ReadLock lock(GetMutex());
     ConfigVarMap& m = GetDatas();
     for(auto it = m.begin(); it != m.end(); ++it) {
-        cb(it->second);
+        cb(it->second); // get config data(ConfigVarBase::ptr) as parameter in callback func 
     }
 }
 

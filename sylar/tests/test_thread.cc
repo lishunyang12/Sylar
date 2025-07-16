@@ -46,5 +46,7 @@ int main(int argc, char** argv) {
     }
     SYLAR_LOG_INFO(g_logger) << "Thread test end";
     SYLAR_LOG_INFO(g_logger) << "count=" << count;
+
+
     return 0;
 }
