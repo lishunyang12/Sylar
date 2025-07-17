@@ -16,8 +16,6 @@ namespace sylar {
         READY
     };
 
-    
-
 /**
  * Lightweight user-space thread (Fiber) implementation 
  * using ucontext for context switching.
@@ -71,6 +69,8 @@ public:
     void swapOut();
 
 public:
+    /// Set current executing fiber
+    static void SetThis(Fiber* f);
     /// Get current executing fiber
     static Fiber::ptr GetThis();
 
