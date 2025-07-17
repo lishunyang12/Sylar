@@ -65,6 +65,8 @@
         "strstream": "cpp",
         "valarray": "cpp",
         "unordered_set": "cpp",
-        "*.txx": "cpp"
+        "*.txx": "cpp",
+        "typeindex": "cpp",
+        "variant": "cpp"
     }
 }
