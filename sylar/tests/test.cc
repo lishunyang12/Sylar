@@ -12,7 +12,7 @@ int main(int argc, char** argv) {
     sylar::LogFormatter::ptr fmt(new sylar::LogFormatter("%d%T%p%T%m%n"));
     file_appender->setFormatter(fmt);
 
-    file_appender->setLevel(sylar::LogLevel::ERROR);
+    file_appender->setLevel(sylar::LogLevel::level::ERROR);
     logger->addAppender(file_appender);
 
     // sylar::LogEvent::ptr event(new sylar::LogEvent(logger, sylar::LogLevel::INFO, __FILE__, __LINE__, 0, sylar::GetThreadId(), sylar::GetFiberId(), time(0)));

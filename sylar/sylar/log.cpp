@@ -9,18 +9,18 @@ namespace sylar {
 
 const char* LogLevel::ToString(LogLevel::level level) {
     switch (level) {
-        case LogLevel::DEBUG: return "DEBUG";
-        case LogLevel::INFO: return "INFO";
-        case LogLevel::WARN: return "WARN";
-        case LogLevel::ERROR: return "ERROR";
-        case LogLevel::FATAL: return "FATAL";
+        case LogLevel::level::DEBUG: return "DEBUG";
+        case LogLevel::level::INFO: return "INFO";
+        case LogLevel::level::WARN: return "WARN";
+        case LogLevel::level::ERROR: return "ERROR";
+        case LogLevel::level::FATAL: return "FATAL";
     default:
         return "UNKNOWN";
     }
 }
 
 LogLevel::level LogLevel::FromString(std::string str) {
-    if(str.empty()) return LogLevel::UNKNOWN;
+    if(str.empty()) return LogLevel::level::UNKNOWN;
     std::transform(str.begin(), str.end(), str.begin(), 
         [](unsigned char c) { return std::toupper(c); });
 
@@ -28,12 +28,12 @@ LogLevel::level LogLevel::FromString(std::string str) {
     if(str == #name) { \
         return LogLevel::name; \
     }
-    XX(DEBUG);
-    XX(INFO);
-    XX(WARN);
-    XX(ERROR);
-    XX(FATAL);
-    return LogLevel::UNKNOWN;
+    XX(level::DEBUG);
+    XX(level::INFO);
+    XX(level::WARN);
+    XX(level::ERROR);
+    XX(level::FATAL);
+    return LogLevel::level::UNKNOWN;
 #undef XX
 }
 
@@ -188,7 +188,7 @@ class TabFormatItem: public LogFormatter::FormatItem {
 
 Logger::Logger(const std::string& name) 
     : m_name(name) 
-    , m_level(LogLevel::DEBUG){
+    , m_level(LogLevel::level::DEBUG){
     m_formatter.reset(new LogFormatter("%d{%Y-%m-%d %H:%M:%S}%T%t%T%F%T[%p]%T[%c]%T%f:%l%T%m%n"));   // default formatter for appenders if their formatter is null
 
 }
@@ -288,19 +288,19 @@ LogFormatter::ptr Logger::getFormatter() {
 }
 
 void Logger::debug(LogEvent::ptr event) {
-    log(LogLevel::DEBUG, event);
+    log(LogLevel::level::DEBUG, event);
 }
 void Logger::info(LogEvent::ptr event) {
-    log(LogLevel::INFO, event);
+    log(LogLevel::level::INFO, event);
 }
 void Logger::warn(LogEvent::ptr event) {
-    log(LogLevel::WARN, event);
+    log(LogLevel::level::WARN, event);
 }
 void Logger::error(LogEvent::ptr event) {
-    log(LogLevel::ERROR, event);
+    log(LogLevel::level::ERROR, event);
 }
 void Logger::fatal(LogEvent::ptr event) {
-    log(LogLevel::FATAL, event);
+    log(LogLevel::level::FATAL, event);
 }
 
 std::string FileLogAppender::toYamlString() {
@@ -328,7 +328,7 @@ std::string StdoutLogAppender::toYamlString() {
     MutexType::Lock lock(m_mutex);
     YAML::Node node;
     node["type"] = "StdoutLogAppender";
-    if(m_level != LogLevel::UNKNOWN)
+    if(m_level != LogLevel::level::UNKNOWN)
     node["level"] = LogLevel::ToString(m_level);
     if(m_hasFormatter && m_formatter) {  // filter out logger's formatter
         node["formatter"] = m_formatter->getPattern();
@@ -582,7 +582,7 @@ std::string Logger::ToYamlString() {
     MutexType lock(m_mutex);
     YAML::Node node;
     node["name"] = m_name;
-    if(m_level != LogLevel::UNKNOWN) {
+    if(m_level != LogLevel::level::UNKNOWN) {
         node["level"] = LogLevel::ToString(m_level);
     }
     if(m_formatter) {
@@ -611,7 +611,7 @@ Logger::ptr LoggerManager::getLogger(const std::string& name) {
 
 struct LogAppenderDefine {
     int type = 0; // 1 File, 2 Stdout
-    LogLevel::level level = LogLevel::UNKNOWN;
+    LogLevel::level level = LogLevel::level::UNKNOWN;
     std::string formatter;
     std::string file;
 
@@ -625,7 +625,7 @@ struct LogAppenderDefine {
 
 struct LogDefine {
     std::string name;
-    LogLevel::level level = LogLevel::UNKNOWN;
+    LogLevel::level level = LogLevel::level::UNKNOWN;
     std::string formatter;
     std::vector<LogAppenderDefine> appenders;
 
@@ -730,7 +730,7 @@ public:
             
             // NOTE: Currently missing other fields (level, formatter, appenders)
             // Should be expanded similar to the deserialization logic
-            if(i.level != LogLevel::UNKNOWN) {
+            if(i.level != LogLevel::level::UNKNOWN) {
                 n["level"] = LogLevel::ToString(i.level);
             }
             if(!i.formatter.empty()) {
@@ -745,7 +745,7 @@ public:
                 } else if(a.type == 2) {
                     na["type"] = "StdoutLogAppender";
                 }
-                if(a.level != LogLevel::UNKNOWN) {
+                if(a.level != LogLevel::level::UNKNOWN) {
                     na["level"] = LogLevel::ToString(a.level);
                 }
                 if(!a.formatter.empty()) {

@@ -1,10 +1,19 @@
 #include "fiber.h"
 
 namespace sylar {
+
+class MallocStackAllocator {
+public:
+    static void* Alloc(size_t size) {
+        return malloc(size);
+    }
+
+    
+};
+
 Fiber(std::function<void()> cb, size_t stacksize = 0);
 
 ~Fiber();  
-
 
 void reset(std::function<void()> cb);
 
