@@ -69,7 +69,7 @@ class LoggerManager;
  */
 class LogLevel {
 public:
-    enum level {
+    enum class level {
         UNKNOWN = 0,
         DEBUG = 1,  ///< Debug-level messages
         INFO = 2,   ///< Informational messages
@@ -329,7 +329,7 @@ public:
 protected:
     friend class Logger;
     /// Minimum log level for this appender (default: DEBUG)
-    LogLevel::level m_level = LogLevel::DEBUG;
+    LogLevel::level m_level = LogLevel::level::DEBUG;
     bool m_hasFormatter = false;
     MutexType m_mutex;
     /// Formatter used to convert log events to strings
@@ -375,7 +375,7 @@ public:
 private:
     friend class LoggerManager;
     std::string m_name;                 // Hierarchical name (e.g. "system.network")
-    LogLevel::level m_level = LogLevel::DEBUG;
+    LogLevel::level m_level = LogLevel::level::DEBUG;
     MutexType m_mutex;
     std::list<LogAppender::ptr> m_appenders;
     LogFormatter::ptr m_formatter;      // Default format for appenders without their own
