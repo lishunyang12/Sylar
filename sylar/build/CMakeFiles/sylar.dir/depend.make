@@ -21,6 +21,9 @@ CMakeFiles/sylar.dir/sylar/thread.cc.o: ../sylar/thread.cc
 CMakeFiles/sylar.dir/sylar/thread.cc.o: ../sylar/thread.h
 CMakeFiles/sylar.dir/sylar/thread.cc.o: ../sylar/util.h
 
+CMakeFiles/sylar.dir/sylar/util.cpp.o: ../sylar/log.h
+CMakeFiles/sylar.dir/sylar/util.cpp.o: ../sylar/singleton.h
+CMakeFiles/sylar.dir/sylar/util.cpp.o: ../sylar/thread.h
 CMakeFiles/sylar.dir/sylar/util.cpp.o: ../sylar/util.cpp
 CMakeFiles/sylar.dir/sylar/util.cpp.o: ../sylar/util.h
 

@@ -113,6 +113,10 @@ atomic
 /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/util.cpp
 util.h
 /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/util.h
+execinfo.h
+-
+log.h
+/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/log.h
 
 /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/util.h
 sys/types.h
@@ -122,5 +126,9 @@ unistd.h
 stdio.h
 -
 stdint.h
+-
+vector
+-
+string
 -
 

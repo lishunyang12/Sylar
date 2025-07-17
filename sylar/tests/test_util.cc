@@ -1,8 +1,10 @@
 #include "sylar/sylar.h"
 #include <assert.h>
 
+sylar::Logger::ptr g_logger = SYLAR_LOG_ROOT();
+
 void test_assert() {
-    assert(0);
+    SYLAR_LOG_INFO(g_logger) << sylar::BacktraceToString(10, 2, "    ");
 } 
 
 int main(int argc, char** argv) {
