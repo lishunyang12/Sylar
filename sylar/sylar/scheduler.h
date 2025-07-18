@@ -1,5 +1,5 @@
-#ifndef __SYLAR_SCHDULER_H__
-#define __SYLAR_SCHDULER_H__
+#ifndef __SYLAR_SCHEDULER_H__  
+#define __SYLAR_SCHEDULER_H__
 
 #include <memory>
 #include <vector>
@@ -18,9 +18,9 @@ public:
     Scheduler(size_t threads = 1, bool use_caller = true, const std::string& name = "");
     virtual ~Scheduler();
     
-    const std::string& getName() const { return m_name; }
+    const std::string& GetName() const { return m_name; }
 
-    static Scheduler* GetThis();
+    static Scheduler* GetCurrentScheduler();
     static Fiber* GetMainFiber();
 
     void start();
@@ -54,6 +54,10 @@ public:
     }
 protected:
     virtual void tickle();
+    void run();
+    virtual bool stopping();
+
+    void setCurrentScheduler();
 private:
     template<class FiberOrCb>
     bool scheduleNoLock(FiberOrCb fc, int thread) {
@@ -102,7 +106,17 @@ private:
     MutexType m_mutex;
     std::vector<Thread::ptr> m_threads;
     std::list<FiberAndThread> m_fiber;
+    Fiber::ptr m_rootFiber;
     std::string m_name;
+
+protected:
+    std::vector<int> m_threadIds;
+    size_t m_threadCount = 0;
+    size_t m_activeThreadCount = 0;
+    size_t m_idleThreadCount = 0;
+    bool m_stopping = true;;
+    bool m_autoStop = false;
+    int m_rootThread = 0;
 };
 
 }

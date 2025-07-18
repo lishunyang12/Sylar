@@ -83,6 +83,8 @@ public:
     static void MainFunc();
 
     static uint64_t GetFiberId();
+
+    State getState() const { return m_state; }
 private:
     uint64_t m_id = 0;          // Unique fiber ID
     uint32_t m_stacksize = 0;   // Stack size in bytes
