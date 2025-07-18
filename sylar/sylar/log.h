@@ -27,7 +27,7 @@
     if(logger->getLevel() <= level) \
         sylar::LogEventWrap(sylar::LogEvent::ptr(new sylar::LogEvent(logger, level, \
           __FILE__, __LINE__, 0, sylar::GetThreadId(), \
-            sylar::GetFiberId(), time(0)))).getSS()
+            sylar::GetFiberId(), time(0), sylar::Thread::GetName()))).getSS()
 
 // Convenience macros for standard levels
 #define SYLAR_LOG_DEBUG(logger) SYLAR_LOG_LEVEL(logger, sylar::LogLevel::level::DEBUG)
@@ -40,7 +40,7 @@
 	if(logger->getLevel() <= level)	\
 		sylar::LogEventWrap(sylar::LogEvent::ptr(new sylar::LogEvent(logger, level, \
 			__FILE__, __LINE__, 0, sylar::GetThreadId(), \
-		sylar::GetFiberId(), time(0)))).getEvent()->format(fmt, __VA_ARGS__)
+		sylar::GetFiberId(), time(0), sylar::Thread::GetName()))).getEvent()->format(fmt, __VA_ARGS__)
 
 /**
  * @def SYLAR_LOG_FMT_LEVEL(logger, level, fmt, ...)
@@ -109,7 +109,7 @@ public:
      * @param time Unix timestamp
      */
     LogEvent(std::shared_ptr<Logger> Logger, LogLevel::level level, const char* file, int32_t m_line, uint32_t elapse, 
-            uint32_t thread_id, uint32_t fiber_id, uint64_t time)
+            uint32_t thread_id, uint32_t fiber_id, uint64_t time, const std::string& thread_name)
         : m_file(file), 
           m_line(m_line),
           m_elapse(elapse),
@@ -117,7 +117,8 @@ public:
           m_fiberId(fiber_id),
           m_time(time),
 		  m_Logger(Logger),
-		  m_level(level) {}
+		  m_level(level),
+          m_threadName(thread_name) {}
 
     const char* getFile() const { return m_file ? m_file : ""; }
     int32_t getLine() const { return m_line; }
@@ -125,6 +126,7 @@ public:
     uint32_t getThreadId() const { return m_threadId; }
     uint32_t getFiberId() const { return m_fiberId; }
     uint64_t getTime() const { return m_time; }
+    const std::string& getThreadName() const { return m_threadName; }
 
     std::string getContent() const { return m_ss.str(); }
 	std::shared_ptr<Logger> getLogger() const { return m_Logger; }
@@ -142,9 +144,9 @@ private:
     uint32_t m_fiberId = 0;      // fiber id
     uint64_t m_time = 0;         // time stamp    
     std::stringstream m_ss;   
-
 	std::shared_ptr<Logger> m_Logger;  
 	LogLevel::level m_level;
+    std::string m_threadName;
 };
 
 /**

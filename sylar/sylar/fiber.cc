@@ -185,6 +185,7 @@ void Fiber::MainFunc() {
         cur->m_state = State::EXCEPT;
         SYLAR_LOG_ERROR(g_logger) << "Fiber Execpt";
     }
+
 }
 }
 

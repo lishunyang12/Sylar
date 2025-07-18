@@ -11,31 +11,43 @@ void run_in_fiber() {
     //     due to uc_link pointing to root_fiber's context
 }
 
+void test_fiber() {
+SYLAR_LOG_INFO(g_logger) << "main begin -1";  // [2] First output
+    {
+        sylar::Fiber::GetCurrentFiber();
+        // Create a new fiber with run_in_fiber as its entry function
+        // This fiber will have uc_link pointing to root_fiber's context
+        sylar::Fiber::ptr fiber(new sylar::Fiber(run_in_fiber));
+        
+        // [First swapIn]
+        // - Saves root_fiber's context (main's execution point here)
+        // - Switches to fiber's context (starts run_in_fiber)
+        fiber->swapIn();  
+        
+        // [5] Execution resumes here after first YieldToHold()
+        SYLAR_LOG_INFO(g_logger) << "main after swapIn";
+        
+        // [Second swapIn]
+        // - Switches back to fiber's context (resumes after YieldToHold)
+        fiber->swapIn();
+    }
+    // [8] Execution resumes here after fiber terminates
+    SYLAR_LOG_INFO(g_logger) << "main end";
+}
+
 int main(int argc, char** argv) {
     // [1] Initialize the root fiber for main thread
     // This captures main's execution context into t_rootFiber
-    sylar::Fiber::GetCurrentFiber();
+    sylar::Thread::SetName("main");
     
-    SYLAR_LOG_INFO(g_logger) << "main begin";  // [2] First output
-    
-    // Create a new fiber with run_in_fiber as its entry function
-    // This fiber will have uc_link pointing to root_fiber's context
-    sylar::Fiber::ptr fiber(new sylar::Fiber(run_in_fiber));
-    
-    // [First swapIn]
-    // - Saves root_fiber's context (main's execution point here)
-    // - Switches to fiber's context (starts run_in_fiber)
-    fiber->swapIn();  
-    
-    // [5] Execution resumes here after first YieldToHold()
-    SYLAR_LOG_INFO(g_logger) << "main after swapIn";
-    
-    // [Second swapIn]
-    // - Switches back to fiber's context (resumes after YieldToHold)
-    fiber->swapIn();
-    
-    // [8] Execution resumes here after fiber terminates
-    SYLAR_LOG_INFO(g_logger) << "main end";
+    std::vector<sylar::Thread::ptr> thrs;
+    for(int i = 0; i < 3; ++i) {
+        thrs.push_back(sylar::Thread::ptr(new sylar::Thread(&test_fiber, "name_" + std::to_string(i))));
+    }
+
+    for(auto i : thrs) {
+        i->join();
+    }
 
     return 0;
 }

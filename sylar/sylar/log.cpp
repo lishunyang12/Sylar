@@ -121,6 +121,14 @@ class FiberFormatItem: public LogFormatter::FormatItem {
         }
 };
 
+class ThreadNameFormatItem: public LogFormatter::FormatItem {
+    public:
+        ThreadNameFormatItem(const std::string str = "") {}
+        void format(std::ostream& os, std::shared_ptr<Logger> logger, LogLevel::level level, LogEvent::ptr event) override {
+            os << event->getThreadName();
+        }
+};
+
 class DateTimeFormatItem: public LogFormatter::FormatItem {
     public:
         DateTimeFormatItem(const std::string& format = "%Y-%m-%d %H:%M:%S")
@@ -189,7 +197,7 @@ class TabFormatItem: public LogFormatter::FormatItem {
 Logger::Logger(const std::string& name) 
     : m_name(name) 
     , m_level(LogLevel::level::DEBUG){
-    m_formatter.reset(new LogFormatter("%d{%Y-%m-%d %H:%M:%S}%T%t%T%F%T[%p]%T[%c]%T%f:%l%T%m%n"));   // default formatter for appenders if their formatter is null
+    m_formatter.reset(new LogFormatter("%d{%Y-%m-%d %H:%M:%S}%T%t%T%N%T%F%T[%p]%T[%c]%T%f:%l%T%m%n"));   // default formatter for appenders if their formatter is null
 
 }
 //%d{%Y-%m-%d %H:%M:%S}%T%t%T%F%T%[p]%T%[%c]%T%f:%l%T%m%n
@@ -537,7 +545,9 @@ void LogFormatter::init() {
         FORMAT_ITEM(f, FileFormatItem),       // %f: Source file name
         FORMAT_ITEM(l, LineFormatItem),       // %l: Line number
         FORMAT_ITEM(T, TabFormatItem),        // %T  Tab character  
-        FORMAT_ITEM(F, FiberFormatItem)       // %F  Fiber ID
+        FORMAT_ITEM(F, FiberFormatItem),       // %F  Fiber ID
+        FORMAT_ITEM(N, ThreadNameFormatItem)       // %F  Fiber ID
+
 
         // Clean up the macro to avoid pollution
         #undef FORMAT_ITEM
