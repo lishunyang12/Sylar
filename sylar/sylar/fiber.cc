@@ -97,7 +97,7 @@ Fiber::~Fiber() {
 } 
 
 // INIT TERM
-void Fiber::reset(std::function<void()> cb) {
+void Fiber::reset(const std::function<void()>& cb) {
     SYLAR_ASSERT(m_stack);
     SYLAR_ASSERT(m_state == State::TERM 
             || m_state == State::INIT

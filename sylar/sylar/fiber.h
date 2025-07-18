@@ -54,7 +54,7 @@ public:
      * Reset fiber with new callback (only valid in INIT/TERM states)
      * @param cb New callback function
      */
-    void reset(std::function<void()> cb);
+    void reset(const std::function<void()>& cb);
 
     /// Switch execution to this fiber
     void swapIn();
@@ -85,6 +85,7 @@ public:
     static uint64_t GetFiberId();
 
     State getState() const { return m_state; }
+    void setState(State val) { m_state = val; }
 private:
     uint64_t m_id = 0;          // Unique fiber ID
     uint32_t m_stacksize = 0;   // Stack size in bytes

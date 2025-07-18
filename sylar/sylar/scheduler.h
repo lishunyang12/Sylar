@@ -56,6 +56,7 @@ protected:
     virtual void tickle();
     void run();
     virtual bool stopping();
+    virtual void idle();
 
     void setCurrentScheduler();
 private:
@@ -105,15 +106,15 @@ private:
 private:
     MutexType m_mutex;
     std::vector<Thread::ptr> m_threads;
-    std::list<FiberAndThread> m_fiber;
+    std::list<FiberAndThread> m_fibers;
     Fiber::ptr m_rootFiber;
     std::string m_name;
 
 protected:
     std::vector<int> m_threadIds;
     size_t m_threadCount = 0;
-    size_t m_activeThreadCount = 0;
-    size_t m_idleThreadCount = 0;
+    std::atomic<size_t> m_activeThreadCount = {0};
+    std::atomic<size_t> m_idleThreadCount = {0};
     bool m_stopping = true;;
     bool m_autoStop = false;
     int m_rootThread = 0;

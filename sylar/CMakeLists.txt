@@ -17,6 +17,7 @@ set(LIB_SRC
     sylar/config.cc 
     sylar/fiber.cc
     sylar/log.cpp
+    sylar/fiber.cc
     sylar/thread.cc
     sylar/util.cpp 
 )
