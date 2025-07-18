@@ -5,6 +5,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
   "/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/config.cc" "/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/build/CMakeFiles/sylar.dir/sylar/config.cc.o"
+  "/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/fiber.cc" "/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/build/CMakeFiles/sylar.dir/sylar/fiber.cc.o"
   "/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/log.cpp" "/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/build/CMakeFiles/sylar.dir/sylar/log.cpp.o"
   "/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/thread.cc" "/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/build/CMakeFiles/sylar.dir/sylar/thread.cc.o"
   "/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/util.cpp" "/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/build/CMakeFiles/sylar.dir/sylar/util.cpp.o"

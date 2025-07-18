@@ -8,14 +8,6 @@
 
 namespace sylar {
 
-    enum class State {
-        INIT,
-        HOLD,
-        EXEC,
-        TERM,
-        READY
-    };
-
 /**
  * Lightweight user-space thread (Fiber) implementation 
  * using ucontext for context switching.
@@ -23,7 +15,7 @@ namespace sylar {
  */
 class Fiber : public std::enable_shared_from_this<Fiber> {
 public:
-    std::shared_ptr<Fiber> ptr;  // Self reference
+    typedef std::shared_ptr<Fiber> ptr;  // Self reference
 
     /**
      * Fiber state machine:
@@ -33,12 +25,13 @@ public:
      * - TERM:  Finished execution
      * - READY: Ready to be scheduled
      */
-    enum State {
+    enum class State {
         INIT,
         HOLD,
         EXEC,
         TERM,
-        READY
+        READY,
+        EXCEPT
     };
 
 
@@ -68,11 +61,11 @@ public:
     /// Yield execution back to scheduler
     void swapOut();
 
+    uint64_t getId() const { return m_id; }
+
 public:
-    /// Set current executing fiber
-    static void SetThis(Fiber* f);
-    /// Get current executing fiber
-    static Fiber::ptr GetThis();
+    static void SetCurrentFiber(Fiber* f);
+    friend Fiber::ptr GetCurrentFiber();
 
     /// Yield execution and set state to READY
     static void YieldToReady();
@@ -86,10 +79,11 @@ public:
     /// Internal entry point that wraps m_cb execution
     static void MainFunc();
 
+    static uint64_t GetFiberId();
 private:
     uint64_t m_id = 0;          // Unique fiber ID
     uint32_t m_stacksize = 0;   // Stack size in bytes
-    State m_state = INIT;       // Current state
+    State m_state = State::INIT;       // Current state
 
     ucontext_t m_ctx;           // Execution context
     void* m_stack = nullptr;    // Allocated stack memory

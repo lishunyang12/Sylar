@@ -14,10 +14,11 @@ find_library(PTHREAD NAMES pthread)
 message("*** YAMLCPP: ${YAMLCPP}")
 
 set(LIB_SRC 
-    sylar/log.cpp
-    sylar/util.cpp 
     sylar/config.cc 
+    sylar/fiber.cc
+    sylar/log.cpp
     sylar/thread.cc
+    sylar/util.cpp 
 )
 
 add_library(sylar SHARED ${LIB_SRC})

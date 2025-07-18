@@ -2,16 +2,20 @@
 #include "config.h"
 #include "macro.h"
 #include <atomic>
+#include "log.h"
 
 namespace sylar {
+
+static Logger::ptr g_logger = SYLAR_LOG_NAME("system");
+
 static std::atomic<uint64_t> s_fiber_id {0};
 static std::atomic<uint64_t> s_fiber_count {0};
 
-static thread_local Fiber* t_fiber = nullptr;
-static thread_local std::shared_ptr<Fiber::ptr> t_threadFiber = nullptr;
+static thread_local Fiber* t_currentFiber = nullptr;                   // observe Current fiber
+static thread_local Fiber::ptr t_rootFiber = nullptr;         // Own Root fiber
 
-static ConfigVar<uint32_t>::ptr g_fiber_stack_size = 
-    Config::Lookup<uint32_t>("fiber.stack_size", 1024* 1024*, "fiber stack size");
+static ConfigVar<uint32_t>::ptr g_default_fiber_stack_size = 
+    Config::Lookup<uint32_t>("fiber.stack_size", 1024* 1024, "fiber stack size");
 
 
 class MallocStackAllocator {
@@ -27,9 +31,16 @@ public:
 
 using StackAllocator = MallocStackAllocator;
 
+uint64_t Fiber::GetFiberId() {
+    if(t_currentFiber) {
+        return t_currentFiber->getId();
+    }
+    return 0;
+}
+
 Fiber::Fiber() {
-    m_state = EXEC;
-    SetThis(this);
+    m_state = State::EXEC;
+    SetCurrentFiber(this);
 
     if(getcontext(&m_ctx)) {
         SYLAR_ASSERT2(false, "getcontext");
@@ -38,11 +49,11 @@ Fiber::Fiber() {
     ++s_fiber_count;
 }
 
-Fiber::Fiber(std::function<void()> cb, size_t stacksize = 0) 
+Fiber::Fiber(std::function<void()> cb, size_t stacksize) 
     :m_id(++s_fiber_id) 
     ,m_cb(cb) {
         ++s_fiber_count;
-        m_stacksize = stacksize ? stacksize : g_fiber_stack_size->getValue();
+        m_stacksize = stacksize ? stacksize : g_default_fiber_stack_size->getValue();
     
     m_stack = StackAllocator::Alloc(m_stacksize);
     if(getcontext(&m_ctx)) {
@@ -58,38 +69,109 @@ Fiber::Fiber(std::function<void()> cb, size_t stacksize = 0)
 Fiber::~Fiber() {
     --s_fiber_count;
     if(m_stack) {
-        SYLAR_ASSERT(m_state == TERM || m_state == INIT );
+        // non-root fiber
+        SYLAR_ASSERT(m_state == State::TERM 
+                || m_state == State::INIT
+                || m_state == State::EXCEPT );
 
         StackAllocator::Dealloc(m_stack, m_stacksize);
     } else {
+        // root fiber
         SYLAR_ASSERT(!m_cb);
-        SYLAR_ASSERT(m_state == EXEC);
+        SYLAR_ASSERT(m_state == State::EXEC);
 
-        Fiber* cur = t_fiber;
+        Fiber* cur = t_currentFiber;
         if(cur == this) {
-            SetThis(nullptr);
+            SetCurrentFiber(nullptr);
         }
     }
 } 
 
-void reset(std::function<void()> cb);
+// INIT TERM
+void Fiber::reset(std::function<void()> cb) {
+    SYLAR_ASSERT(m_stack);
+    SYLAR_ASSERT(m_state == State::TERM 
+            || m_state == State::INIT
+            || m_state == State::EXCEPT);
+    m_cb = cb;
+    if(getcontext(&m_ctx)) {
+        SYLAR_ASSERT2(false, "getcontext");
+    }
 
-void swapIn();
+    m_ctx.uc_link = nullptr;
+    m_ctx.uc_stack.ss_sp = m_stack;
+    m_ctx.uc_stack.ss_size = m_stacksize;
 
-void swapOut();
+    makecontext(&m_ctx, &Fiber::MainFunc, 0);
+    m_state = State::INIT;
+}
+
+void Fiber::swapIn() {
+    SetCurrentFiber(this);
+    SYLAR_ASSERT(m_state != State::EXEC);
+    m_state = State::EXEC;
+
+    if(swapcontext(&(t_rootFiber->m_ctx), &m_ctx)) {
+        SYLAR_ASSERT2(false, "swapcontext");
+    }
+}
+
+void Fiber::swapOut() {
+    SetCurrentFiber(t_rootFiber.get());
+
+    if(swapcontext(&m_ctx, &(t_rootFiber->m_ctx))) {
+        SYLAR_ASSERT2(false, "swapcontext");       
+    }
+}
 
 
-static Fiber::ptr GetThis();
+Fiber::ptr GetCurrentFiber() {
+    if(t_currentFiber) {
+        return t_currentFiber->shared_from_this();
+    }
 
-void SetThis(Fiber* f);
+    // Lazy Initialization， create main fiber with emptry callback
+    Fiber::ptr main_fiber(new Fiber);
+    SYLAR_ASSERT(t_currentFiber = main_fiber.get());
+    t_rootFiber = main_fiber;
+    return main_fiber;
+}
 
-static void YieldToReady();
+void Fiber::SetCurrentFiber(Fiber* f) {
+    t_currentFiber = f;
+}
 
-static void YieldToHold();
+void Fiber::YieldToReady() {
+    Fiber::ptr cur = GetCurrentFiber();
+    cur->m_state = State::READY;
+    cur->swapOut();
+}
 
-static uint64_t TotalFibers();
+void Fiber::YieldToHold() {
+    Fiber::ptr cur = GetCurrentFiber();
+    cur->m_state = State::HOLD;
+    cur->swapOut();
+}
 
-static void MainFunc();
+uint64_t Fiber::TotalFibers() {
+    return s_fiber_count;
+}
+
+void Fiber::MainFunc() {
+    Fiber::ptr cur = GetCurrentFiber();
+    SYLAR_ASSERT(cur);
+    try {
+        cur->m_cb();
+        cur->m_cb = nullptr;
+        cur->m_state = State::TERM;
+    } catch (std::exception& ex) {
+        cur->m_state = State::EXCEPT;
+        SYLAR_LOG_ERROR(g_logger) << "Fiber Execpt: " << ex.what();
+    } catch(...) {
+        cur->m_state = State::EXCEPT;
+        SYLAR_LOG_ERROR(g_logger) << "Fiber Execpt";
+    }
+}
 }
 
 // 1. t_fiber (Thread-Local Storage)
