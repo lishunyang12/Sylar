@@ -59,7 +59,11 @@ Fiber::Fiber(std::function<void()> cb, size_t stacksize)
     if(getcontext(&m_ctx)) {
         SYLAR_ASSERT2(false, "getcontext");
     }
-    m_ctx.uc_link = nullptr;
+    if(this == t_rootFiber.get()) {
+        m_ctx.uc_link = nullptr;  
+    } else {
+        m_ctx.uc_link = t_rootFiber->getContext();
+    }
     m_ctx.uc_stack.ss_sp = m_stack;
     m_ctx.uc_stack.ss_size = m_stacksize;
 
@@ -98,7 +102,12 @@ void Fiber::reset(std::function<void()> cb) {
         SYLAR_ASSERT2(false, "getcontext");
     }
 
-    m_ctx.uc_link = nullptr;
+    if(this == t_rootFiber.get()) {
+        m_ctx.uc_link = nullptr;  
+    } else {
+        m_ctx.uc_link = t_rootFiber->getContext();
+    }
+
     m_ctx.uc_stack.ss_sp = m_stack;
     m_ctx.uc_stack.ss_size = m_stacksize;
 
@@ -125,7 +134,7 @@ void Fiber::swapOut() {
 }
 
 
-Fiber::ptr GetCurrentFiber() {
+Fiber::ptr Fiber::GetCurrentFiber() {
     if(t_currentFiber) {
         return t_currentFiber->shared_from_this();
     }

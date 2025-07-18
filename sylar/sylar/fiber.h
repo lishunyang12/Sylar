@@ -36,8 +36,9 @@ public:
 
 
 
-private:
+public:
     Fiber();  // Private default constructor
+
 
 public:
     /**
@@ -63,9 +64,11 @@ public:
 
     uint64_t getId() const { return m_id; }
 
+    ucontext_t* getContext() { return &m_ctx; }
+
 public:
     static void SetCurrentFiber(Fiber* f);
-    friend Fiber::ptr GetCurrentFiber();
+    static Fiber::ptr GetCurrentFiber();  
 
     /// Yield execution and set state to READY
     static void YieldToReady();

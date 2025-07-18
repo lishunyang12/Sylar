@@ -1,3 +1,4 @@
+/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/build/CMakeFiles/test_fiber.dir
 /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/build/CMakeFiles/rebuild_cache.dir
 /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/build/CMakeFiles/test_util.dir
 /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/build/CMakeFiles/test_config.dir
