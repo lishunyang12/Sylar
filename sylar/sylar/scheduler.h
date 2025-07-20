@@ -43,32 +43,50 @@ public:
     void schedule(InputIterator begin, InputIterator end) {
         bool need_tickle = false;
         {
-            MutexType::lock lock(m_mutex);
+            MutexType::Lock lock(m_mutex);
             while(begin != end) {
-                tickle = scheduleNoLock(&*begin) || need_tickle;
+                need_tickle = scheduleNoLock(&*begin) || need_tickle;
+                ++begin;
             }
         }
         if(need_tickle) {
             tickle();
         }
     }
+
 protected:
-    virtual void tickle();
+    struct FiberAndThread;
     void run();
+    // Task fetching and handling
+    FiberAndThread fetchTask();
+    // Initialize scheduler context for current thread
+    bool shouldSkipTask(const FiberAndThread& ft) const;
+    void handleFiberTask(Fiber::ptr fiber);
+    void handleCallbackTask(std::function<void()>& cb, Fiber::ptr& cb_fiber);
+    bool checkIdleTermination(const Fiber::ptr& idle_fiber) const;
+    void runIdleLogic(Fiber::ptr& idle_fiber);
+
+    // Initialization
+    void initializeSchedulerContext();
+    void setCurrentScheduler();
+
+    // Virtual methods
+    virtual void tickle();
     virtual bool stopping();
     virtual void idle();
 
-    void setCurrentScheduler();
+
 private:
     template<class FiberOrCb>
     bool scheduleNoLock(FiberOrCb fc, int thread) {
-        bool need_tickle = m_fiber.empty();
+        bool need_tickle = m_fibers.empty();
         FiberAndThread ft(fc, thread);
         if(ft.fiber || ft.cb) {
-            m_fiber.push_back(ft);
+            m_fibers.push_back(ft);
         }
         return need_tickle;
     }
+
 private:
     struct FiberAndThread {
         Fiber::ptr fiber;
@@ -80,7 +98,7 @@ private:
         
         FiberAndThread(Fiber::ptr* f, int thr) 
             :thread(thr) {
-                fiber.swap(*f);     // convert to nullptr and decrement count
+                fiber.swap(*f);
         }
 
         FiberAndThread(std::function<void()> f, int thr) 
@@ -101,6 +119,9 @@ private:
             cb = nullptr;
             thread = -1;
         }
+
+        bool isFiberTask() const { return fiber != nullptr; }
+        bool isCallbackTask() const { return cb != nullptr; }
     };
 
 private:
@@ -115,10 +136,12 @@ protected:
     size_t m_threadCount = 0;
     std::atomic<size_t> m_activeThreadCount = {0};
     std::atomic<size_t> m_idleThreadCount = {0};
-    bool m_stopping = true;;
+    bool m_stopping = true;
     bool m_autoStop = false;
     int m_rootThread = 0;
 };
+
+
 
 }
 

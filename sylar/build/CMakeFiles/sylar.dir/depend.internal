@@ -14,6 +14,7 @@ CMakeFiles/sylar.dir/sylar/fiber.cc.o
  /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/fiber.h
  /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/log.h
  /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/macro.h
+ /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/scheduler.h
  /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/singleton.h
  /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/thread.h
  /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/util.h
@@ -21,6 +22,15 @@ CMakeFiles/sylar.dir/sylar/log.cpp.o
  /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/config.h
  /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/log.cpp
  /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/log.h
+ /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/singleton.h
+ /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/thread.h
+ /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/util.h
+CMakeFiles/sylar.dir/sylar/scheduler.cc.o
+ /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/fiber.h
+ /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/log.h
+ /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/macro.h
+ /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/scheduler.cc
+ /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/scheduler.h
  /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/singleton.h
  /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/thread.h
  /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/util.h

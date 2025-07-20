@@ -8,12 +8,14 @@
 
 namespace sylar {
 
+class Scheduler;
 /**
  * Lightweight user-space thread (Fiber) implementation 
  * using ucontext for context switching.
  * Inherits from enable_shared_from_this for safe shared_ptr handling.
  */
 class Fiber : public std::enable_shared_from_this<Fiber> {
+friend class Scheduler;
 public:
     typedef std::shared_ptr<Fiber> ptr;  // Self reference
 
@@ -61,6 +63,8 @@ public:
 
     /// Yield execution back to scheduler
     void swapOut();
+
+    void call();
 
     uint64_t getId() const { return m_id; }
 
