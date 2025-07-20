@@ -36,6 +36,8 @@ void Scheduler::initializeCallerThreadContext() {
 
     t_root_fiber = m_rootFiber.get();
     m_rootThread = sylar::GetThreadId();
+    SYLAR_LOG_INFO(g_logger) << "root thread is set id: " + m_rootThread 
+                            << "current root fiber is set";
 
     m_threadIds.push_back(m_rootThread);
 }
