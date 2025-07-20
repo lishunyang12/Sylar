@@ -116,10 +116,19 @@ void Fiber::reset(const std::function<void()>& cb) {
 }
 
 void Fiber::call() {
+    SetCurrentFiber(this);
     m_state = State::EXEC;
+    SYLAR_LOG_ERROR(g_logger) << getId();
     if(swapcontext(&(t_rootFiber->m_ctx), &m_ctx)) {
         SYLAR_ASSERT2(false, "swapcontext");
     }
+}
+
+void Fiber::back() {
+    SetCurrentFiber(t_rootFiber.get());
+    if(swapcontext(&m_ctx, &t_rootFiber->m_ctx)) {
+        SYLAR_ASSERT2(false, "swapcontext");
+    } 
 }
 
 void Fiber::swapIn() {
@@ -137,13 +146,14 @@ void Fiber::swapOut() {
         SetCurrentFiber(Scheduler::GetMainFiber());
         if(swapcontext(&m_ctx, &Scheduler::GetMainFiber()->m_ctx)) {
             SYLAR_ASSERT2(false, "swapcontext");
-        } 
+        }
     } else {
         SetCurrentFiber(t_rootFiber.get());
         if(swapcontext(&m_ctx, &t_rootFiber->m_ctx)) {
             SYLAR_ASSERT2(false, "swapcontext");
-        }
+        } 
     }
+
 }
 
 

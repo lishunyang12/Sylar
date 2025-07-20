@@ -24,7 +24,19 @@ public:
     static Fiber* GetMainFiber();
 
     void start();
+    bool isRunning() const;
+    void prepareWorkerThreads();
+    void createAndAddWorkerThread(size_t index);
+    void startRootFiberIfNeeded();
+    
     void stop();
+    bool canStopImmediately() const;
+    void validateStopConditions();
+    void signalAllThreadsToStop();
+    void cleanupAfterStop();
+    void clearPendingTasks();
+    void joinAllWorkerThreads();
+
 
     template<class FiberOrCb> 
     void schedule(FiberOrCb fc, int thread = -1) {
@@ -54,38 +66,7 @@ public:
         }
     }
 
-protected:
-    struct FiberAndThread;
-    void run();
-    // Task fetching and handling
-    FiberAndThread fetchTask();
-    // Initialize scheduler context for current thread
-    bool shouldSkipTask(const FiberAndThread& ft) const;
-    void handleFiberTask(Fiber::ptr fiber);
-    void handleCallbackTask(std::function<void()>& cb, Fiber::ptr& cb_fiber);
-    bool checkIdleTermination(const Fiber::ptr& idle_fiber) const;
-    void runIdleLogic(Fiber::ptr& idle_fiber);
-
-    // Initialization
-    void initializeSchedulerContext();
-    void setCurrentScheduler();
-
-    // Virtual methods
-    virtual void tickle();
-    virtual bool stopping();
-    virtual void idle();
-
-
-private:
-    template<class FiberOrCb>
-    bool scheduleNoLock(FiberOrCb fc, int thread) {
-        bool need_tickle = m_fibers.empty();
-        FiberAndThread ft(fc, thread);
-        if(ft.fiber || ft.cb) {
-            m_fibers.push_back(ft);
-        }
-        return need_tickle;
-    }
+    void initializeCallerThreadContext();
 
 private:
     struct FiberAndThread {
@@ -123,6 +104,40 @@ private:
         bool isFiberTask() const { return fiber != nullptr; }
         bool isCallbackTask() const { return cb != nullptr; }
     };
+
+protected:
+    void run();
+    // Task fetching and handling
+    FiberAndThread fetchTask();
+    // Initialize scheduler context for current thread
+    bool shouldSkipTask(const FiberAndThread& ft, bool& need_notify)const;
+    void handleFiberTask(Fiber::ptr fiber);
+    void handleCallbackTask(std::function<void()>& cb, Fiber::ptr& cb_fiber);
+    bool checkIdleTermination(const Fiber::ptr& idle_fiber) const;
+    void runIdleLogic(Fiber::ptr& idle_fiber);
+
+    // Initialization
+    void initializeSchedulerContext();
+    void setCurrentScheduler();
+
+    // Virtual methods
+    virtual void tickle();
+    virtual bool stopping();
+    virtual void idle();
+
+
+private:
+    template<class FiberOrCb>
+    bool scheduleNoLock(FiberOrCb fc, int thread) {
+        bool need_tickle = m_fibers.empty();
+        FiberAndThread ft(fc, thread);
+        if(ft.fiber || ft.cb) {
+            m_fibers.push_back(ft);
+        }
+        return need_tickle;
+    }
+
+
 
 private:
     MutexType m_mutex;

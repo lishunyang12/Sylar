@@ -9,30 +9,38 @@ static thread_local Scheduler* t_current_scheduler = nullptr;
 static thread_local Fiber* t_root_fiber = nullptr;
 
 Scheduler::Scheduler(size_t worker_thread_count, bool use_caller_thread, const std::string& name) 
-    :m_name(name) {
-    SYLAR_ASSERT(worker_thread_count > 0);
+    :m_name(name), 
+     m_threadCount(worker_thread_count),
+     m_rootThread(-1) 
+    {
+   
+    SYLAR_ASSERT2(worker_thread_count > 0, "Worker thread count should be positive");
 
     if(use_caller_thread) {
-        sylar::Fiber::GetCurrentFiber();
-        --worker_thread_count;
-
-        SYLAR_ASSERT(GetCurrentScheduler() == nullptr);
-        t_current_scheduler = this;
-
-        m_rootFiber.reset(new Fiber(std::bind(&Scheduler::run, this)));
-        sylar::Thread::SetName(m_name);
-
-        t_root_fiber = m_rootFiber.get();
-        m_rootThread = sylar::GetThreadId();
-        m_threadIds.push_back(m_rootThread);
-    } else {
-        m_rootThread = -1;
-    }
-    m_threadCount = worker_thread_count;
+       initializeCallerThreadContext();  
+    } 
 }
 
+void Scheduler::initializeCallerThreadContext() {
+    sylar::Fiber::GetCurrentFiber();
+    --m_threadCount;  // 使用成员变量更清晰
+
+    SYLAR_ASSERT(GetCurrentScheduler() == nullptr && "Current scheduler should be null");
+    t_current_scheduler = this;
+
+    m_rootFiber.reset(new Fiber(std::bind(&Scheduler::run, this)));
+    sylar::Thread::SetName(m_name);
+
+    t_root_fiber = m_rootFiber.get();
+    m_rootThread = sylar::GetThreadId();
+    m_threadIds.push_back(m_rootThread);
+}
+
+
+
 Scheduler::~Scheduler() {
-    SYLAR_ASSERT(m_stopping);
+    // SYLAR_ASSERT2(stopping(), 
+    //     "Scheduler must be fully stopped before destruction (threads running or tasks pending)");
     if(GetCurrentScheduler() == this) {
         if(m_rootFiber && m_rootFiber->getState() == Fiber::State::EXEC) {
             m_rootFiber->setState(Fiber::State::TERM);
@@ -51,78 +59,122 @@ Fiber* Scheduler::GetMainFiber() {
 
 void Scheduler::start() {
     MutexType::Lock lock(m_mutex);
-    if(!m_stopping) {
+    
+    if (isRunning()) {
         return;
     }
-    m_stopping = false;
+    
+    prepareWorkerThreads();
+    lock.unlock();
+    startRootFiberIfNeeded();
+}
 
+bool Scheduler::isRunning() const {
+    return !m_stopping;
+}
+
+void Scheduler::prepareWorkerThreads() {
+    m_stopping = false;
     SYLAR_ASSERT(m_threads.empty());
 
-    m_threads.resize(m_threadCount);
-    for(size_t i = 0; i < m_threadCount; ++i) {
-        m_threads[i].reset(new Thread(std::bind(&Scheduler::run, this)
-                                        , m_name + "_" + std::to_string(i)));
-        m_threadIds.push_back(m_threads[i]->getId());
+    m_threads.reserve(m_threadCount);  // 预分配空间更高效
+    for (size_t i = 0; i < m_threadCount; ++i) {
+        createAndAddWorkerThread(i);
     }
-    lock.unlock();
+}
 
-    if(m_rootFiber) {
+void Scheduler::createAndAddWorkerThread(size_t index) {
+    m_threads.emplace_back(
+        new Thread(std::bind(&Scheduler::run, this),
+                  m_name + "_" + std::to_string(index)));
+    m_threadIds.push_back(m_threads.back()->getId());
+}
+
+void Scheduler::startRootFiberIfNeeded() {
+    if (m_rootFiber) {
         m_rootFiber->call();
         SYLAR_LOG_INFO(g_logger) << "call out";
     }
 }
 
+
 void Scheduler::stop() {
     m_autoStop = true;
-    if(m_rootFiber && m_threadCount == 0 && ((m_rootFiber->getState() == Fiber::State::TERM)
-            || m_rootFiber->getState() == Fiber::State::INIT)) {
-        SYLAR_LOG_INFO(g_logger) << this << " stopped";
-        m_stopping = true;
-
-        if(stopping()) {
-            return;
-        }
+    
+    if (canStopImmediately()) {
+        return;
     }
 
-    if(m_rootThread != -1) {
-        SYLAR_ASSERT(GetCurrentScheduler() == this);   
+    validateStopConditions();
+    signalAllThreadsToStop();
+
+    while(!stopping()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+
+    cleanupAfterStop();
+}
+
+bool Scheduler::canStopImmediately() const {
+    return m_rootFiber && 
+           m_threadCount == 0 && 
+           (m_rootFiber->getState() == Fiber::State::TERM || 
+            m_rootFiber->getState() == Fiber::State::INIT);
+}
+
+void Scheduler::validateStopConditions() {
+    if (m_rootThread != -1) {
+        SYLAR_ASSERT(GetCurrentScheduler() == this);
     } else {
         SYLAR_ASSERT(GetCurrentScheduler() != this);
     }
+}
 
+void Scheduler::signalAllThreadsToStop() {
     m_stopping = true;
-    for(size_t i = 0; i < m_threadCount; ++i) {
+    
+    // 通知工作线程
+    for (size_t i = 0; i < m_threadCount; ++i) {
         tickle();
     }
-
-    if(m_rootFiber) {
+    
+    // 通知根fiber
+    if (m_rootFiber) {
         tickle();
     }
+}
 
-    if(stopping()) {
+void Scheduler::cleanupAfterStop() {
+    if (stopping()) {
         return;
     }
- 
-    // if(exit_on_this_fiber) {
 
-    // }
-    {
-        MutexType::Lock lock(m_mutex);
-        m_fibers.clear();
-    }
+    clearPendingTasks();
+    joinAllWorkerThreads();
+}
 
-    for(auto& t : m_threads) {
+void Scheduler::clearPendingTasks() {
+    MutexType::Lock lock(m_mutex);
+    m_fibers.clear();
+}
+
+void Scheduler::joinAllWorkerThreads() {
+    for (auto& t : m_threads) {
         t->join();
     }
     m_threads.clear();
 }
+
+
 
 void Scheduler::setCurrentScheduler() {
     t_current_scheduler = this;
 }
 
 
+
 void Scheduler::run() {
+    SYLAR_LOG_INFO(g_logger) << "run";
     // Initialize scheduler context for current thread
     initializeSchedulerContext();
 
@@ -149,6 +201,7 @@ void Scheduler::run() {
     }
 }
 
+
 void Scheduler::initializeSchedulerContext() {
     setCurrentScheduler();
     if (sylar::GetThreadId() != m_rootThread) {
@@ -165,8 +218,7 @@ Scheduler::FiberAndThread Scheduler::fetchTask() {
         MutexType::Lock lock(m_mutex);
         for (auto it = m_fibers.begin(); it != m_fibers.end(); ) {
             // Skip tasks not assigned to current thread
-            if (shouldSkipTask(*it)) {
-                need_notify = true;
+            if (shouldSkipTask(*it, need_notify)) {
                 ++it;
                 continue;
             }
@@ -185,12 +237,16 @@ Scheduler::FiberAndThread Scheduler::fetchTask() {
     return task;
 }
 
-bool Scheduler::shouldSkipTask(const FiberAndThread& ft) const {
-    // Skip if:
-    // 1. Task is bound to another thread, or
-    // 2. Fiber is already executing
-    return (ft.thread != -1 && ft.thread != sylar::GetThreadId()) ||
-           (ft.fiber && ft.fiber->getState() == Fiber::State::EXEC);
+bool Scheduler::shouldSkipTask(const FiberAndThread& ft, bool& need_notify) const {
+    if (ft.thread != -1 && ft.thread != sylar::GetThreadId()) {
+        need_notify = true;  // 任务绑定到其他线程，需要通知
+        return true;
+    }
+    if (ft.fiber && ft.fiber->getState() == Fiber::State::EXEC) {
+        need_notify = false;  // 任务已在执行，无需通知
+        return true;
+    }
+    return false;  // 不跳过任务XEC);
 }
 
 void Scheduler::handleFiberTask(Fiber::ptr fiber) {
@@ -260,6 +316,7 @@ void Scheduler::runIdleLogic(Fiber::ptr& idle_fiber) {
     }
 }
 
+
 void Scheduler::tickle() {
     SYLAR_LOG_INFO(g_logger) << "tickle";
 }
@@ -271,7 +328,7 @@ bool Scheduler::stopping() {
 }
 
 void Scheduler::idle() {
-
+    SYLAR_LOG_INFO(g_logger) << "idle";
 }
 
 
@@ -329,4 +386,4 @@ void Scheduler::idle() {
 //         ↑_____________|
 
 // Thread States:
-// CREATED → RUNNING → (STEALING_TASK|EXECUTING) → SHUTTING_DOWN → TERMINATED
+// CREATED → RUNNING → (EXECUTING) → SHUTTING_DOWN → TERMINATED
