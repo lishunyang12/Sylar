@@ -25,7 +25,7 @@ void Scheduler::initializeCallerThreadContext() {
     sylar::Fiber::GetCurrentFiber();
     --m_threadCount;  // 使用成员变量更清晰
 
-    SYLAR_ASSERT(GetCurrentScheduler() == nullptr && "Current scheduler should be null");
+    SYLAR_ASSERT2(GetCurrentScheduler() == nullptr, "Current scheduler should be null");
     t_current_scheduler = this;
 
     m_rootFiber.reset(new Fiber(std::bind(&Scheduler::run, this)));

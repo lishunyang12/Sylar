@@ -124,13 +124,6 @@ void Fiber::call() {
     }
 }
 
-void Fiber::back() {
-    SetCurrentFiber(t_rootFiber.get());
-    if(swapcontext(&m_ctx, &t_rootFiber->m_ctx)) {
-        SYLAR_ASSERT2(false, "swapcontext");
-    } 
-}
-
 void Fiber::swapIn() {
     SetCurrentFiber(this);
     SYLAR_ASSERT(m_state != State::EXEC);
