@@ -49,7 +49,7 @@ Fiber::Fiber() {
 
     ++s_fiber_count;
 
-    SYLAR_LOG_DEBUG(g_logger) << "Fiber::Fiber";
+    SYLAR_LOG_DEBUG(g_logger) << "Fiber::Fiber  root fiber.";
 }
 
 Fiber::Fiber(std::function<void()> cb, size_t stacksize) 
@@ -62,11 +62,8 @@ Fiber::Fiber(std::function<void()> cb, size_t stacksize)
     if(getcontext(&m_ctx)) {
         SYLAR_ASSERT2(false, "getcontext");
     }
-    if(this == t_rootFiber.get()) {
-        m_ctx.uc_link = nullptr;  
-    } else {
-        m_ctx.uc_link = t_rootFiber->getContext();
-    }
+    
+    m_ctx.uc_link = nullptr;  
     m_ctx.uc_stack.ss_sp = m_stack;
     m_ctx.uc_stack.ss_size = m_stacksize;
 

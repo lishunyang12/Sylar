@@ -17,8 +17,11 @@ Scheduler::Scheduler(size_t worker_thread_count, bool use_caller_thread, const s
     SYLAR_ASSERT2(worker_thread_count > 0, "Worker thread count should be positive");
 
     if(use_caller_thread) {
+        SYLAR_LOG_INFO(g_logger) << "choose use call mode";
        initializeCallerThreadContext();  
-    } 
+    } else {
+        SYLAR_LOG_INFO(g_logger) << "choose non use call mode";
+    }
 }
 
 void Scheduler::initializeCallerThreadContext() {
@@ -33,6 +36,7 @@ void Scheduler::initializeCallerThreadContext() {
 
     t_root_fiber = m_rootFiber.get();
     m_rootThread = sylar::GetThreadId();
+
     m_threadIds.push_back(m_rootThread);
 }
 
@@ -180,16 +184,21 @@ void Scheduler::run() {
 
     // Prepare idle fiber and callback fiber
     Fiber::ptr idle_fiber(new Fiber(std::bind(&Scheduler::idle, this)));
+    SYLAR_LOG_INFO(g_logger) << "idle fiber created";
+    // idle fiber created
     Fiber::ptr cb_fiber;
 
     while (true) {
         // Try to fetch a task from queue
+        SYLAR_LOG_INFO(g_logger) << "start to fetch task....";
         FiberAndThread task = fetchTask();
 
         // Handle different task types
         if (task.fiber) {
+            SYLAR_LOG_INFO(g_logger) << "fiber to be scheduled";
             handleFiberTask(task.fiber);
         } else if (task.cb) {
+            SYLAR_LOG_INFO(g_logger) << "function to be scheduled";
             handleCallbackTask(task.cb, cb_fiber);
         } else {
             // No tasks available, run idle logic
@@ -216,6 +225,7 @@ Scheduler::FiberAndThread Scheduler::fetchTask() {
 
     {
         MutexType::Lock lock(m_mutex);
+        SYLAR_LOG_INFO(g_logger) << "Current queue size: " << m_fibers.size();  // 打印队列大小
         for (auto it = m_fibers.begin(); it != m_fibers.end(); ) {
             // Skip tasks not assigned to current thread
             if (shouldSkipTask(*it, need_notify)) {
@@ -226,6 +236,7 @@ Scheduler::FiberAndThread Scheduler::fetchTask() {
             // Found executable task
             task = *it;
             m_fibers.erase(it);
+            SYLAR_LOG_INFO(g_logger) << "Task fetched from queue";
             break;
         }
     }
@@ -302,6 +313,7 @@ bool Scheduler::checkIdleTermination(const Fiber::ptr& idle_fiber) const {
         SYLAR_LOG_INFO(g_logger) << "idle fiber terminated";
         return true;
     }
+    SYLAR_LOG_INFO(g_logger) << "idle fiber not terminated";
     return false;
 }
 

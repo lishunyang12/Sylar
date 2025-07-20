@@ -7,8 +7,13 @@
 #include "fiber.h"
 #include "thread.h"
 #include "fiber.h"
+#include "log.h"
+
+
 
 namespace sylar {
+
+static sylar::Logger::ptr g_logger_hello = SYLAR_LOG_NAME("system");
 
 class Scheduler {
 public:
@@ -129,11 +134,13 @@ protected:
 private:
     template<class FiberOrCb>
     bool scheduleNoLock(FiberOrCb fc, int thread) {
+        SYLAR_LOG_INFO(g_logger_hello) << "schedule task starting...";
         bool need_tickle = m_fibers.empty();
         FiberAndThread ft(fc, thread);
         if(ft.fiber || ft.cb) {
             m_fibers.push_back(ft);
         }
+        SYLAR_LOG_INFO(g_logger_hello) << "the number of fibers to be scheduled: " << m_fibers.size();
         return need_tickle;
     }
 

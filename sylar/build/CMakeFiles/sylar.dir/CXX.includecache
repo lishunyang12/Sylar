@@ -137,6 +137,8 @@ thread.h
 /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/thread.h
 fiber.h
 /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/fiber.h
+log.h
+/home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/log.h
 
 /home/li/Desktop/Sylar/High-Performance-Sylar-Server/sylar/sylar/singleton.h
 
