@@ -11,9 +11,10 @@ void test_fiber() {
 int main(int argc, char** argv) {
     SYLAR_LOG_INFO(g_logger) << "main";
     sylar::Scheduler sc(3); 
-    sc.schedule(&test_fiber);
+
     sc.start();
 
+    sc.schedule(&test_fiber);
     // 0-> main()
     // 1-> scheduler - root thread
     // 2-> idle
