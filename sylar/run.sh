@@ -16,7 +16,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(nproc)
 # Run test program
 # First go to bin directory where executables are output
 # Then execute the test_config binary
-cd ../bin && ./test_scheduler
+cd ../bin && ./test_fiber
 
 # Return to project root directory
 # This maintains consistent working directory for subsequent operations
