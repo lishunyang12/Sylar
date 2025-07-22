@@ -12,6 +12,36 @@ namespace sylar {
 
 static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
 
+IOManager::FdContext::EventContext& IOManager::FdContext::getContext(IOManager::Event event) {
+  switch(event) {
+    case IOManager::READ:
+      return read;
+    case IOManager::WRITE:
+      return write;
+    default: 
+      SYLAR_ASSERT2(false, "getContext");
+  }
+}
+
+void IOManager::FdContext::resetContext(EventContext& ctx) {
+  ctx.scheduler = nullptr;
+  ctx.fiber.reset();
+  ctx.cb = nullptr;
+}
+
+void IOManager::FdContext::triggerEvent(Event event) {
+    SYLAR_ASSERT(events & event);
+    events = (Event)(events & ~event);
+    EventContext& ctx = getContext(event);
+    if(ctx.cb) {
+      ctx.scheduler->schedule(&ctx.cb);
+    } else {
+      ctx.scheduler->schedule(&ctx.fiber);
+    }
+    ctx.scheduler = nullptr;
+    return;
+}
+
 IOManager::IOManager(size_t threads = 1, bool use_caller = true, const std::string& name = "")
   : Scheduler(threads,use_caller, name) {
     m_epfd = epoll_create(5000);
@@ -171,9 +201,7 @@ bool IOManager::cancelEvent(int fd, Event event) {
     return false;
   }
 
-
-  FdContext::EventContext& event_ctx = fd_ctx->getContext(event);
-  event_ctx->triggerEvent(event);
+  fd_ctx->triggerEvent(event);
   --m_pendingEventCount;
   return true;
 }
@@ -212,20 +240,21 @@ bool IOManager::cancelAll(int fd) {
   }
 
   if(fd_ctx->events & READ) {
-    FdContext::EventContext& event_ctx = fd_ctx->getContext(READ);
-    event_ctx->triggerEvent(READ);
+    fd_ctx->triggerEvent(WRITE);
     --m_pendingEventCount;
   }
 
   if(fd_ctx->events & WRITE) {
-    FdContext::EventContext& event_ctx = fd_ctx->getContext(WRITE);
-    event_ctx->triggerEvent(WRITE);
+    fd_ctx->triggerEvent(READ);
     --m_pendingEventCount;
   }
 
+  SYLAR_ASSERT(fd_ctx->events == 0);
   return true;
 }
 
-static IOManager* GetThis();
+IOManager* IOManager::GetThis() {
+  return dynamic_cast<IOManager*>(Scheduler::GetThis());
+}
 
 }

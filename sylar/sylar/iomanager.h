@@ -27,6 +27,7 @@ private:
 
         EventContext& getContext(Event event);
         void resetContext(EventContext& ctx);
+        void triggerEvent(Event event);
 
         EventContext read;      // read event
         EventContext write;     // write event
