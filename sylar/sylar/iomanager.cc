@@ -110,10 +110,121 @@ int IOManager::addEvent(int fd, Event event, std::function<void()> cb = nullptr)
   return 0;
 }
 
-bool IOManager::delEvent(int fd, Event event);
-bool cancelEvent(int fd, Event event);
+bool IOManager::delEvent(int fd, Event event) {
+  RWMutexType::ReadLock lock(m_mutex);
+  if(m_fdContexts.size() <= fd) {
+    return false;
+  }
+  FdContext* fd_ctx = m_fdContexts[fd];
+  lock.unlock();
 
-bool cancelAll(int fd);
+  FdContext::MutexType::Lock lock2(fd_ctx->mutex);
+  if(!(fd_ctx->events & event)) {
+    return false;
+  }
+
+  Event new_events = (Event)(fd_ctx->events & ~event);
+  int op = new_events ? EPOLL_CTL_MOD : EPOLL_CTL_DEL;
+  epoll_event epevent;
+  epevent.events = EPOLLET | new_events;
+  epevent.data.ptr = fd_ctx;
+
+  int rt = epoll_ctl(m_epfd, op, fd, &epevent);
+  if(!rt) {
+    SYLAR_LOG_ERROR(g_logger) << "epoll_ctl(" << m_epfd << ", "
+                    << op << "," << fd << "," << epevent.events << "):"
+                    << rt << " ()" << errno << ") (" << strerror(errno) << ")";
+    return false;
+  }
+
+  --m_pendingEventCount;
+  fd_ctx->events = new_events;
+  FdContext::EventContext& event_ctx = fd_ctx->getContext(event);
+  fd_ctx->resetContext(event_ctx);
+  return true;
+}
+
+bool IOManager::cancelEvent(int fd, Event event) {
+  RWMutexType::ReadLock lock(m_mutex);
+  if(m_fdContexts.size() <= fd) {
+    return false;
+  }
+  FdContext* fd_ctx = m_fdContexts[fd];
+  lock.unlock();
+
+  FdContext::MutexType::Lock lock2(fd_ctx->mutex);
+  if(!(fd_ctx->events & event)) {
+    return false;
+  }
+
+  Event new_events = (Event)(fd_ctx->events & ~event);
+  int op = new_events ? EPOLL_CTL_MOD : EPOLL_CTL_DEL;
+  epoll_event epevent;
+  epevent.events = EPOLLET | new_events;
+  epevent.data.ptr = fd_ctx;
+
+  int rt = epoll_ctl(m_epfd, op, fd, &epevent);
+  if(!rt) {
+    SYLAR_LOG_ERROR(g_logger) << "epoll_ctl(" << m_epfd << ", "
+                    << op << "," << fd << "," << epevent.events << "):"
+                    << rt << " ()" << errno << ") (" << strerror(errno) << ")";
+    return false;
+  }
+
+
+  FdContext::EventContext& event_ctx = fd_ctx->getContext(event);
+  event_ctx->triggerEvent(event);
+  --m_pendingEventCount;
+  return true;
+}
+
+bool IOManager::cancelAll(int fd) {
+  RWMutexType::ReadLock lock(m_mutex);
+  if(m_fdContexts.size() <= fd) {
+    return false;
+  }
+  FdContext* fd_ctx = m_fdContexts[fd];
+  lock.unlock();
+
+  FdContext::MutexType::Lock lock2(fd_ctx->mutex);
+  if(!fd_ctx->events) {
+    return false;
+  }
+
+  int op =  EPOLL_CTL_DEL;
+  epoll_event epevent;
+  epevent.events = 0;
+  epevent.data.ptr = fd_ctx;
+
+  int rt = epoll_ctl(m_epfd, op, fd, &epevent);
+  if(!rt) {
+    SYLAR_LOG_ERROR(g_logger) << "epoll_ctl(" << m_epfd << ", "
+                    << op << "," << fd << "," << epevent.events << "):"
+                    << rt << " ()" << errno << ") (" << strerror(errno) << ")";
+    return false;
+  }
+
+  if(fd_ctx->events & READ) {
+
+  }
+  if(fd_ctx->events & WRITE) {
+
+  }
+
+  if(fd_ctx->events & READ) {
+    FdContext::EventContext& event_ctx = fd_ctx->getContext(READ);
+    event_ctx->triggerEvent(READ);
+    --m_pendingEventCount;
+  }
+
+  if(fd_ctx->events & WRITE) {
+    FdContext::EventContext& event_ctx = fd_ctx->getContext(WRITE);
+    event_ctx->triggerEvent(WRITE);
+    --m_pendingEventCount;
+  }
+
+  return true;
+}
 
 static IOManager* GetThis();
 
