@@ -25,6 +25,8 @@ private:
             std::function<void()> cb;         // event callback
         };
 
+        EventContext& getContext(Event event);
+
         EventContext read;      // read event
         EventContext write;     // write event
         int fd = 0;     

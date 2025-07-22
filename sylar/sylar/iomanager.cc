@@ -2,9 +2,11 @@
 #include "macro.h"
 #include "log.h"
 
+#include <errno.h>
 #include <unistd.h>
 #include <sys/epoll.h>
 #include <fcntl.h>
+#include <string.h>
 
 namespace sylar {
 
@@ -72,10 +74,43 @@ int IOManager::addEvent(int fd, Event event, std::function<void()> cb = nullptr)
     fd_ctx = m_fdContexts[fd];
   }
 
-  FdContext::MutexType::Lock lock(fd_ctx->mutex);
+  FdContext::MutexType::Lock lock2(fd_ctx->mutex);
+  if(fd_ctx->events & event) {
+    SYLAR_LOG_ERROR(g_logger) << "addEvent assert fd=" << fd 
+                        << " event=" << event
+                        << " fd_ctx.event" << fd_ctx->events;
+    SYLAR_ASSERT(!(fd_ctx->events & event));
+  }
+
+  int op = fd_ctx->events ?  EPOLL_CTL_MOD : EPOLL_CTL_ADD;
+  epoll_event epevent;
+  epevent.events = EPOLLET | fd_ctx->events | event;
+  epevent.data.ptr = fd_ctx;
+
+  int rt = epoll_ctl(m_epfd, op, fd, &epevent);
+  if(!rt) {
+    SYLAR_LOG_ERROR(g_logger) << "epoll_ctl(" << m_epfd << ", "
+                    << op << "," << fd << "," << epevent.events << "):"
+                    << rt << " ()" << errno << ") (" << strerror(errno) << ")";
+    return -1;
+  }
+
+  ++m_pendingEventCount;
+  fd_ctx->events = (Event)(fd_ctx->events | event);
+  FdContext::EventContext& event_ctx = fd_ctx->getContext(event);
+  SYLAR_ASSERT(!(event_ctx.scheduler || event_ctx.fiber 
+                || event_ctx.cb));
+  event_ctx.scheduler = Scheduler::GetThis();
+  if(cb) {
+    event_ctx.cb.swap(cb);
+  } else {
+    event_ctx.fiber = Fiber::GetThis();
+    SYLAR_ASSERT(event_ctx.fiber->getState() == Fiber::EXEC);
+  }
+  return 0;
 }
 
-bool delEvent(int fd, Event event);
+bool IOManager::delEvent(int fd, Event event);
 bool cancelEvent(int fd, Event event);
 
 bool cancelAll(int fd);
