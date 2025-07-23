@@ -1,10 +1,10 @@
-## 1.Logging Module
+## 1. Logging Module
 Supports both stream-style and printf-style logging，Customizable log formats, log levels, and log separation.
 Stream-style usage：SYLAR_LOG_INFO(g_logger) << "this is a log";
 Formatted usage：SYLAR_LOG_FMT_INFO(g_logger, "%s", "this is a log");
 Configurable fields: timestamp, thread ID, thread name, log level, logger name, filename, line number
 
-## 2.Configuration Module
+## 2. Configuration Module
 Convention-over-configuration design
 YAML-based configuration with change notifications
 Supports hierarchical data types and STL containers (vector, list, set, map)),
@@ -18,7 +18,7 @@ to obtain the parameter's value. When the configuration is modified and reloaded
 this value will be automatically updated.
 
 The configuration format is as follows:
-```
+```YAML
 tcp:
     connect:
             timeout: 10000
