@@ -57,7 +57,7 @@ Efficiently reuses all threads for optimal performance.
   ```math
   \text{Throughput} = \frac{\text{Coroutines Completed}}{\text{Thread Seconds}}
 
-## IO Coroutine Scheduler Module
+## 6. IO Coroutine Scheduler Module
 Inherits from the coroutine scheduler and encapsulates epoll (Linux), supporting timer functionality 
 (implemented using epoll with millisecond precision). 
 Provides capabilities to add, remove, and cancel socket read/write events. 
