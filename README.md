@@ -1,8 +1,12 @@
 ## 1. Logging Module
 Supports both stream-style and printf-style logging.
+
 Customizable log formats, log levels, and log separation.
+
 Stream-style usage：SYLAR_LOG_INFO(g_logger) << "this is a log".
+
 Formatted usage：SYLAR_LOG_FMT_INFO(g_logger, "%s", "this is a log").
+
 Configurable fields: timestamp, thread ID, thread name, log level, logger name, filename, line number
 
 ## 2. Configuration Module
