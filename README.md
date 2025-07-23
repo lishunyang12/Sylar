@@ -42,9 +42,23 @@ but much more lightweight. By integrating with socket hooking,
 complex asynchronous calls can be encapsulated into synchronous operations,
 significantly reducing the complexity of business logic implementation.
 
-Current Implementation:
-The current coroutine implementation is based on ucontext_t.
+## 5. Coroutine Scheduler Module
 
-Future Support
-In the future, we will also support implementation using fcontext_t from
-Boost.Context, providing higher performance and flexibility.
+A coroutine scheduler that manages coroutine execution, implemented as a thread pool with N:M scheduling model:
+- **N** threads
+- **M** coroutines
+Efficiently reuses all threads for optimal performance.
+
+### Key Features
+- **Flexible Scheduling**:
+  - Automatic load balancing across threads
+  - Option to pin coroutines to specific threads
+- **Efficient Resource Utilization**:
+  ```math
+  \text{Throughput} = \frac{\text{Coroutines Completed}}{\text{Thread Seconds}}
+
+## IO Coroutine Scheduler Module
+Inherits from the coroutine scheduler and encapsulates epoll (Linux), supporting timer functionality 
+(implemented using epoll with millisecond precision). 
+Provides capabilities to add, remove, and cancel socket read/write events. 
+Supports one-shot timers, recurring timers, and conditional timers.
