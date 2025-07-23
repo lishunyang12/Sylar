@@ -29,6 +29,7 @@ including objects such as Thread, Semaphore, Mutex, RWMutex,
 and Spinlock, facilitating daily thread operations in development.
 
 Why not use C++11's std::thread?
+
 Although this framework is developed using C++11, 
 we chose not to use std::thread because it is ultimately implemented based on pthread. 
 Additionally, C++11 does not provide certain synchronization primitives like read-write mutexes 
@@ -41,7 +42,7 @@ but much more lightweight. By integrating with socket hooking,
 complex asynchronous calls can be encapsulated into synchronous operations,
 significantly reducing the complexity of business logic implementation.
 
--Current Implementation:
+Current Implementation:
 The current coroutine implementation is based on ucontext_t.
 
 Future Support
