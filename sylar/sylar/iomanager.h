@@ -35,7 +35,7 @@ private:
         Event events = NONE;
         MutexType mutex;
     };
-
+    
 public:
     IOManager(size_t threads = 1, bool use_caller = true, const std::string& name = "");
     ~IOManager();
