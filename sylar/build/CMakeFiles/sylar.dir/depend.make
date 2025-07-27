@@ -18,6 +18,16 @@ CMakeFiles/sylar.dir/sylar/fiber.cc.o: ../sylar/singleton.h
 CMakeFiles/sylar.dir/sylar/fiber.cc.o: ../sylar/thread.h
 CMakeFiles/sylar.dir/sylar/fiber.cc.o: ../sylar/util.h
 
+CMakeFiles/sylar.dir/sylar/iomanager.cc.o: ../sylar/fiber.h
+CMakeFiles/sylar.dir/sylar/iomanager.cc.o: ../sylar/iomanager.cc
+CMakeFiles/sylar.dir/sylar/iomanager.cc.o: ../sylar/iomanager.h
+CMakeFiles/sylar.dir/sylar/iomanager.cc.o: ../sylar/log.h
+CMakeFiles/sylar.dir/sylar/iomanager.cc.o: ../sylar/macro.h
+CMakeFiles/sylar.dir/sylar/iomanager.cc.o: ../sylar/scheduler.h
+CMakeFiles/sylar.dir/sylar/iomanager.cc.o: ../sylar/singleton.h
+CMakeFiles/sylar.dir/sylar/iomanager.cc.o: ../sylar/thread.h
+CMakeFiles/sylar.dir/sylar/iomanager.cc.o: ../sylar/util.h
+
 CMakeFiles/sylar.dir/sylar/log.cpp.o: ../sylar/config.h
 CMakeFiles/sylar.dir/sylar/log.cpp.o: ../sylar/log.cpp
 CMakeFiles/sylar.dir/sylar/log.cpp.o: ../sylar/log.h

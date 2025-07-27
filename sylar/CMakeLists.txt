@@ -16,9 +16,9 @@ message("*** YAMLCPP: ${YAMLCPP}")
 set(LIB_SRC 
     sylar/config.cc 
     sylar/fiber.cc
+    sylar/iomanager.cc
     sylar/log.cpp
     sylar/scheduler.cc
-    sylar/fiber.cc
     sylar/thread.cc
     sylar/util.cpp 
 )
@@ -51,5 +51,9 @@ target_link_libraries(test_fiber ${LIB_LIB})
 add_executable(test_scheduler tests/test_scheduler.cc)
 add_dependencies(test_scheduler sylar)
 target_link_libraries(test_scheduler ${LIB_LIB})
+
+add_executable(test_iomanager tests/test_iomanager.cc)
+add_dependencies(test_iomanager sylar)
+target_link_libraries(test_iomanager ${LIB_LIB})
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)

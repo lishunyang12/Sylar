@@ -55,7 +55,6 @@ protected:
     void idle() override;
 
     void contextResize(size_t size);
-
 private:
     int m_epfd = 0;
     int m_tickleFds[2];
